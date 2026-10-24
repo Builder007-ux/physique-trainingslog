@@ -1,0 +1,605 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Physique Trainingslog</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2d5b4e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<style>
+:root{--bg:#f5f4f0;--card:#fffffd;--fg:#1c1c1a;--muted:#6d6c66;--line:#dcdad2;--accent:#2d5b4e;--bar:#a9cbbf;--warn:#9a4a1f;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#151614;--card:#1d1e1b;--fg:#ebeae4;--muted:#9a9990;--line:#33342f;--accent:#8cc7b1;--bar:#3f6558;--warn:#e7a878;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151614;--card:#1d1e1b;--fg:#ebeae4;--muted:#9a9990;--line:#33342f;--accent:#8cc7b1;--bar:#3f6558;--warn:#e7a878;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+main{max-width:1040px;margin:0 auto;display:grid;gap:20px}
+h1{font-size:24px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.sub{color:var(--muted);margin:4px 0 0;font-size:14px}
+.today{font-size:14px;margin:10px 0 0}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+input,select,button{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0;width:100%;box-sizing:border-box}
+input[type=checkbox]{width:22px;height:22px;padding:0;margin:2px 0 0;accent-color:var(--accent)}
+input:focus-visible,select:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600;cursor:pointer;width:auto;padding:9px 18px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.row2{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.status{color:var(--muted);font-size:13px}
+.lifts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.clickable{cursor:pointer}
+.clickable:hover{border-color:var(--accent)}
+.big{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.nm{font-weight:600}
+.tg{font-size:13px;color:var(--muted)}
+.chart{display:flex;align-items:flex-end;gap:6px;height:110px;margin-top:14px;border-bottom:1px solid var(--line)}
+.bar{flex:1;background:var(--bar);border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.bar.last{background:var(--accent)}
+.bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;padding-bottom:2px;font-variant-numeric:tabular-nums}
+.axis{display:flex;gap:6px;font-size:11px;color:var(--muted);margin-top:4px}
+.axis div{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.empty{color:var(--muted);font-size:14px;margin:8px 0 0}
+.chk-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.chk-item.done .nm{color:var(--accent)}
+.chk-item .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:8px}
+.chk-item .fields label{font-size:12px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.note{white-space:normal;min-width:120px;color:var(--muted)}
+th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.del{width:auto;padding:4px 8px;font-size:12px;color:var(--warn);background:none;cursor:pointer}
+.prlist{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:4px;font-size:14px;font-variant-numeric:tabular-nums}
+.prlist li{display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:6px 0}
+details{border-bottom:1px solid var(--line);padding:10px 0}
+details:first-of-type{border-top:1px solid var(--line)}
+summary{cursor:pointer;font-weight:600}
+details ul{padding-left:20px;margin:6px 0}
+details p,details li{font-size:14px}
+svg.graph{width:100%;height:auto;display:block;margin-top:10px;overflow:visible}
+svg.graph text{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+svg.graph .gl{stroke:var(--line)}
+svg.graph .ln{fill:none;stroke:var(--accent);stroke-width:2}
+svg.graph .dot{fill:var(--accent)}
+svg.graph .pr{fill:var(--warn)}
+.wk-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:4px 0 0}
+.wk-sum div{display:grid;gap:2px}
+.wk-sum span{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.wk-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px}
+.day{border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+.day h3{margin:0 0 8px;font-size:16px}
+.day ul{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:4px;font-size:14px}
+.day li b{display:inline-block;width:24px;color:var(--accent);font-weight:600}
+.day ul.more{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:8px;margin-bottom:0}
+</style>
+<main>
+  <header>
+    <h1>Physique Trainingslog</h1>
+    <p class="sub">Plan vom 24.10.2026 · Woche 1 beginnt Mo 26.10.2026 · Ende Bulk April 2027</p>
+    <p class="today" id="today"></p>
+  </header>
+
+  <section class="card">
+    <h2>Trainingstag abhaken</h2>
+    <div class="row2">
+      <label style="min-width:180px">Datum<input type="date" id="cdate"></label>
+      <span class="status" id="cday"></span>
+    </div>
+    <div id="checklist"></div>
+    <div class="row"><button class="primary" id="csave" type="button">Speichern</button><span class="status" id="cst" role="status"></span></div>
+    <p class="meta">Ein Haken zählt als gemacht. Gewicht und Wiederholungen des besten Satzes werden für den Fortschritt übernommen. Nicht abgehakte Übungen fließen nicht in den Fortschritt ein.</p>
+  </section>
+
+  <section class="card">
+    <h2>Satz eintragen</h2>
+    <form id="f" class="form" autocomplete="off">
+      <label>Datum<input type="date" id="date" required></label>
+      <label>Übung<select id="ex"></select></label>
+      <label id="ownL" hidden>Eigene Übung<input id="own" maxlength="60"></label>
+      <label>Gewicht (kg)<input type="number" id="w" step="0.5" min="0" inputmode="decimal" value="0"></label>
+      <label>Wiederholungen<input type="number" id="r" step="1" min="1" max="50" inputmode="numeric" required></label>
+      <label>Reserve (RiR, optional)<input type="number" id="rir" step="1" min="0" max="10" inputmode="numeric"></label>
+      <label style="grid-column:1/-1">Notiz<input id="note" maxlength="200"></label>
+    </form>
+    <div class="row"><button class="primary" form="f" type="submit">Speichern</button><span class="status" id="st" role="status"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>PR eintragen</h2>
+    <form id="pf" class="form" autocomplete="off">
+      <label>Datum<input type="date" id="pdate" required></label>
+      <label>Übung<select id="pex"></select></label>
+      <label>Gewicht (kg)<input type="number" id="pw" step="0.5" min="0" inputmode="decimal"></label>
+      <label>Wiederholungen<input type="number" id="pr_n" step="1" min="1" max="20" value="1" inputmode="numeric"></label>
+      <label style="grid-column:1/-1">Notiz<input id="pnote" maxlength="120"></label>
+    </form>
+    <div class="row"><button class="primary" form="pf" type="submit">PR speichern</button><span class="status" id="pst" role="status"></span></div>
+    <p class="meta">Bei Klimmzügen Gewicht leer lassen und die Anzahl strikter Wiederholungen eintragen.</p>
+    <ul class="prlist" id="prlist"></ul>
+  </section>
+
+  <section>
+    <h2>Fortschritt</h2>
+    <div class="lifts">
+      <div class="card clickable" id="c-bank" data-ex="Bankdrücken" role="button" tabindex="0"></div>
+      <div class="card clickable" id="c-squat" data-ex="Kniebeuge" role="button" tabindex="0"></div>
+      <div class="card clickable" id="c-dead" data-ex="Kreuzheben" role="button" tabindex="0"></div>
+      <div class="card clickable" id="c-pull" data-ex="Klimmzug" role="button" tabindex="0"></div>
+    </div>
+    <p class="meta">Tippe auf eine Karte, um ihren Verlauf unten anzuzeigen.</p>
+  </section>
+
+  <section class="card" id="verlauf">
+    <h2>Verlauf</h2>
+    <div class="row2">
+      <label>Übung<select id="vex"></select></label>
+      <label>Wiederholungen<select id="vrep"></select></label>
+    </div>
+    <div id="vgraph"></div>
+  </section>
+
+  <section class="card">
+    <h2>Letzte Einträge</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Datum</th><th>Übung</th><th>kg</th><th>Wdh.</th><th>RiR</th><th>Notiz</th><th></th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="none">Noch keine Einträge. Hake oben einen Trainingstag ab oder trag einen Satz ein.</p>
+  </section>
+
+  <section>
+    <h2>Wochenstruktur</h2>
+    <div class="card">
+      <p class="meta">Fünf Trainingstage, Do und So frei. Jede Hauptübung kommt 3× pro Woche vor: eine schwere Einheit (H, 3–5 Wdh.) und zwei Volumen-Einheiten (V, 6–8 Wdh.). Bei Bankdrücken und Kniebeuge steigt die Last um 2,5 kg, bei Kreuzheben um 5 kg, wenn das obere Ende der Spanne mit 2 Wdh. in Reserve erreicht ist.</p>
+      <div class="wk-sum">
+        <div><strong>Bankdrücken</strong><span>H Mo · V Di · V Fr</span></div>
+        <div><strong>Kniebeuge</strong><span>V Mo · H Mi · V Sa</span></div>
+        <div><strong>Kreuzheben</strong><span>H Di · V Mi · V Fr</span></div>
+      </div>
+      <div class="wk-days">
+        <article class="day">
+          <h3>Montag</h3>
+          <ul>
+            <li><b>H</b>Bankdrücken 4×4 · 72,5 kg</li>
+            <li><b>V</b>Kniebeuge 3×8 · 45–50 kg</li>
+          </ul>
+          <ul class="more">
+            <li>Schulterdrücken 3×8–12</li>
+            <li>Dips 3×8–12</li>
+            <li>Trizepsdrücken 3×10–15</li>
+            <li>Seitheben 3×12–20</li>
+          </ul>
+        </article>
+        <article class="day">
+          <h3>Dienstag</h3>
+          <ul>
+            <li><b>H</b>Kreuzheben 3×3–5 · 100 kg</li>
+            <li><b>V</b>Bankdrücken 3×6–8 · ca. 65 kg</li>
+          </ul>
+          <ul class="more">
+            <li>Klimmzüge 4 Sätze nah am Versagen</li>
+            <li>Rudern 3×8–12</li>
+            <li>Langhantel-Curls 3×10–12</li>
+          </ul>
+        </article>
+        <article class="day">
+          <h3>Mittwoch</h3>
+          <ul>
+            <li><b>H</b>Kniebeuge 4×4 · 55 → 60 kg</li>
+            <li><b>V</b>Kreuzheben 3×6–8 · ca. 90 kg</li>
+          </ul>
+          <ul class="more">
+            <li>Trizepsdrücken 3×12–15</li>
+            <li>Überkopf-Trizeps 3×10–15 (Kabel)</li>
+            <li>Bizeps-Curls KH 3×12–15</li>
+          </ul>
+        </article>
+        <article class="day">
+          <h3>Freitag</h3>
+          <ul>
+            <li><b>V</b>Bankdrücken 3×6–8 · ca. 65 kg</li>
+            <li><b>V</b>Kreuzheben 2×8 · ca. 90 kg</li>
+          </ul>
+          <ul class="more">
+            <li>Schrägbank 3×8–12</li>
+            <li>Pec Deck 3×10–15</li>
+            <li>Seitheben 4×12–20</li>
+            <li>Überkopf-Trizeps 3×10–15</li>
+            <li>Face Pulls 3×15–20</li>
+          </ul>
+        </article>
+        <article class="day">
+          <h3>Samstag</h3>
+          <ul>
+            <li><b>V</b>Kniebeuge 3×8 · 45–50 kg</li>
+          </ul>
+          <ul class="more">
+            <li>Klimmzug-Negatives 3×3</li>
+            <li>Hohe Klimmzüge 3×4</li>
+            <li>Latzug 3×10–15</li>
+            <li>Kabelrudern 3×12–15</li>
+            <li>Hammer Curls 3×10–12</li>
+            <li>Preacher Curls 3×10–12</li>
+          </ul>
+        </article>
+      </div>
+      <p class="meta" style="margin-top:14px">Direkte Sätze pro Woche: Bizeps 12 · Trizeps 12 · Schulter 10 (plus 3 Face Pulls). Klimmzüge, Dips und Bankdrücken wirken zusätzlich auf Arme und Schulter.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Trainingsplan</h2>
+    <details open>
+      <summary>Ziele</summary>
+      <ul>
+        <li>Hypertrophie: Arme (Bizeps und Trizeps, höchste Priorität), Schultern, Brust, Rücken. Beine nur über die Kniebeuge-Stärke.</li>
+        <li>Kraft (3–5 Wdh.) nur bei Bankdrücken, Kniebeuge und Kreuzheben. Bankdrücken 100 kg auf 1 Wdh. bis April (105 kg als Option).</li>
+        <li>Klimmzüge strikt auf 12–13, Muscle-Up als Skill-Ziel. Kein Sprint, keine Leichtathletik.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Aufwärmen (alle Trainingstage, ca. 10 Min.)</summary>
+      <ul>
+        <li>5 Min. Rad oder Rudern, leicht</li>
+        <li>Band Pull-Aparts 2 × 15, Außenrotation mit Band 2 × 12 je Seite, Armkreisen 1 Min.</li>
+        <li>Scapular Pull-ups an der Klimmstange 2 × 8</li>
+        <li>Dead Hang 2 × 20 Sek. (Zieh- und Drücktage)</li>
+      </ul>
+      <p><strong>Ramp-Sätze</strong> (60 Sek. Pause) vor der ersten schweren Übung:</p>
+      <ul>
+        <li>Bankdrücken: 40 kg × 8, 55 kg × 5, 65 kg × 3, dann 72,5 kg</li>
+        <li>Kniebeuge: 20 kg × 8, 35 kg × 5, 45 kg × 3, dann 55 kg</li>
+        <li>Kreuzheben: 40 kg × 5, 70 kg × 3, 85 kg × 2, dann 100 kg</li>
+        <li>Klimmzüge: 2 × 3 leicht. Dips: 2 × 3 leicht vor dem Arbeitssatz.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Regeln und Check</summary>
+      <ul>
+        <li><strong>Schulter:</strong> Leichtes Ziehen während der Übung ist in Ordnung, wenn es am nächsten Tag weg ist. Bleibt der Schmerz, nimmt er zu, oder treten Taubheit oder Schwellung auf: Last reduzieren und ärztlich oder physiotherapeutisch abklären lassen.</li>
+        <li><strong>Dips-Form:</strong> Schultern nach unten, weg von den Ohren. Oberkörper leicht nach vorne. Nur so tief, dass die Schultern nicht nach vorne ziehen. Kein Schwung.</li>
+        <li><strong>Kniebeuge-Technik:</strong> Fußspitzen leicht nach außen, Knie folgen den Füßen, Brust oben, Becken kippt unten nicht weg. Einen Arbeitssatz pro Woche seitlich filmen.</li>
+        <li><strong>Check nach 4 Wochen (ca. 23.11.2026):</strong> Bleibt Schulter-Schmerz, oder ist Griff- oder Rückenermüdung spürbar, wird der Freitags-Kreuzheben-Satz gestrichen. Kreuzheben geht dann auf 2× pro Woche.</li>
+        <li><strong>Stagnation:</strong> Stagniert eine Hauptübung zwei Wochen, folgt eine Entlastungswoche mit ca. 10 % weniger Last.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Testwochen</summary>
+      <p>Alle 6 Wochen eine Woche mit ca. 20 % weniger Sätzen: <strong>Woche 6</strong> ab Mo 30.11.2026, <strong>Woche 12</strong> ab Mo 11.01.2027, <strong>Woche 18</strong> ab Mo 22.02.2027, <strong>Woche 24</strong> ab Mo 05.04.2027.</p>
+      <ul>
+        <li>Mo: Bankdrücken 5er-Satz mit Testlast (Bankdrücken nur mit Sicherheitsstangen oder Partner testen)</li>
+        <li>Di: Klimmzug strikt maximal, Dead Hang</li>
+        <li>Mi: Kniebeuge 5er-Satz mit Testlast</li>
+        <li>Sa: Kreuzheben 3er-Satz mit Testlast</li>
+      </ul>
+      <p>Richtwerte Bankdrücken: Woche 12 ca. 80 kg für 5 Wdh., Woche 18 ca. 84 kg, Woche 24 ca. 86 kg. Klimmzüge: Woche 12 ca. 10 strikt, Woche 24 ca. 12–13.</p>
+    </details>
+    <details>
+      <summary>Stand und offene Punkte</summary>
+      <ul>
+        <li>Eigene Hypertrophie-Übungen vom Nutzer noch ausstehend.</li>
+        <li>Bankdrücken-Programm von Quin Stott (59,99 USD, ohne Sätze und Wiederholungen): nicht blind kaufen. Vorher Sätze, Wiederholungen und eine Beispielwoche schriftlich anfragen.</li>
+      </ul>
+    </details>
+  </section>
+
+  <p class="meta">Deine Einträge liegen nur auf diesem Gerät. Synchronisierung kommt später.</p>
+</main>
+<script>
+const EX=['Bankdrücken','Kniebeuge','Kreuzheben','Klimmzug','Klimmzug-Negatives','Hohe Klimmzüge','Schulterdrücken','Schrägbank','Dips','Trizepsdrücken','Überkopf-Trizeps','Seitheben','Pec Deck','Face Pulls','Rudern','Latzug','Kabelrudern','Langhantel-Curls','Hammer Curls','Preacher Curls','Bizeps-Curls KH','Eigene Übung'];
+// [Name in Liste, Name fürs Log, Ziel]
+const DAYS={
+  1:{k:'Mo',items:[['Bankdrücken H','Bankdrücken','4×4 · 72,5 kg'],['Kniebeuge V','Kniebeuge','3×8 · 45–50 kg'],['Schulterdrücken','Schulterdrücken','3×8–12'],['Dips','Dips','3×8–12'],['Trizepsdrücken','Trizepsdrücken','3×10–15'],['Seitheben','Seitheben','3×12–20']]},
+  2:{k:'Di',items:[['Kreuzheben H','Kreuzheben','3×3–5 · 100 kg'],['Bankdrücken V','Bankdrücken','3×6–8 · ca. 65 kg'],['Klimmzüge','Klimmzug','4 Sätze nah am Versagen · Wdh. = bester Satz'],['Rudern','Rudern','3×8–12'],['Langhantel-Curls','Langhantel-Curls','3×10–12']]},
+  3:{k:'Mi',items:[['Kniebeuge H','Kniebeuge','4×4 · 55 → 60 kg'],['Kreuzheben V','Kreuzheben','3×6–8 · ca. 90 kg'],['Trizepsdrücken','Trizepsdrücken','3×12–15'],['Überkopf-Trizeps','Überkopf-Trizeps','3×10–15 · Kabel'],['Bizeps-Curls KH','Bizeps-Curls KH','3×12–15']]},
+  5:{k:'Fr',items:[['Bankdrücken V','Bankdrücken','3×6–8 · ca. 65 kg'],['Kreuzheben V','Kreuzheben','2×8 · ca. 90 kg'],['Schrägbank','Schrägbank','3×8–12'],['Pec Deck','Pec Deck','3×10–15'],['Seitheben','Seitheben','4×12–20'],['Überkopf-Trizeps','Überkopf-Trizeps','3×10–15'],['Face Pulls','Face Pulls','3×15–20']]},
+  6:{k:'Sa',items:[['Kniebeuge V','Kniebeuge','3×8 · 45–50 kg'],['Klimmzug-Negatives','Klimmzug-Negatives','3×3'],['Hohe Klimmzüge','Hohe Klimmzüge','3×4'],['Latzug','Latzug','3×10–15'],['Kabelrudern','Kabelrudern','3×12–15'],['Hammer Curls','Hammer Curls','3×10–12'],['Preacher Curls','Preacher Curls','3×10–12']]}
+};
+const DAYN=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const START=new Date(2026,9,26);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const dmy=s=>{const [y,m,d]=s.split('-');return d+'.'+m+'.'+y};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const slug=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ß/g,'ss').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();
+const monday=s=>{const d=parse(s);const dow=(d.getDay()+6)%7;return ymd(new Date(d.getFullYear(),d.getMonth(),d.getDate()-dow))};
+const weekNo=s=>{const n=Math.round((parse(s)-START)/864e5);return n<0?0:Math.floor(n/7)+1};
+const e1=(w,r)=>w*(1+r/30);
+const fmt=v=>(Math.round(v*10)/10).toString().replace('.',',');
+const msg=e=>e&&e.code==='quota_exceeded'?'Speicher voll. Ältere Einträge löschen.':e&&e.code==='revoked'?'Der Zugriff wurde entzogen.':'Nicht gespeichert'+(e&&e.code?' ('+e.code+')':'')+'.';
+const nextTrainDate=from=>{for(let i=0;i<7;i++){const d=new Date(from.getFullYear(),from.getMonth(),from.getDate()+i);if(DAYS[d.getDay()])return d;}return from;};
+
+const $=id=>document.getElementById(id);
+const st=$('st'), f=$('f'), exS=$('ex'), ownL=$('ownL'), ownEl=$('own'), wEl=$('w'), rEl=$('r'), rirEl=$('rir'), noteEl=$('note'), dateEl=$('date');
+const cdate=$('cdate'), checklist=$('checklist'), cst=$('cst'), cday=$('cday');
+const pf=$('pf'), pex=$('pex'), pw=$('pw'), prr=$('pr_n'), pdate=$('pdate'), pnote=$('pnote'), pst=$('pst');
+const vex=$('vex'), vrep=$('vrep'), tb=$('tb');
+let rows=[], checksMap={}, checksCol=null, setsCol=null, ready=false, dirty=false;
+
+function renderToday(){
+  const t=new Date(), s=ymd(t), wk=weekNo(s), day=DAYS[t.getDay()];
+  $('today').textContent=(wk?'Woche '+wk+' von 28':'Vor Woche 1')+' · Heute '+DAYN[t.getDay()]+' '+dmy(s)+': '+(day?day.items.length+' Übungen':'Ruhetag (Do und So frei)');
+}
+
+function lastWeight(name){
+  const r=rows.find(x=>x.exercise===name&&x.weight>0);
+  return r?fmt(r.weight):'';
+}
+
+function renderChecklist(){
+  const d=parse(cdate.value||ymd(new Date()));
+  const day=DAYS[d.getDay()];
+  if(!day){ cday.textContent='Ruhetag'; checklist.innerHTML='<p class="empty">An diesem Tag ist kein Training geplant.</p>'; return; }
+  cday.textContent=day.k+' · Woche '+weekNo(ymd(d));
+  const saved=(checksMap[ymd(d)+'_'+day.k]||{}).items||{};
+  checklist.innerHTML=day.items.map(([name,log,target])=>{
+    const key=slug(name), s=saved[key]||{};
+    const ph=lastWeight(log);
+    return '<div class="chk-item'+(s.done?' done':'')+'" data-key="'+esc(key)+'" data-log="'+esc(log)+'" data-name="'+esc(name)+'">'
+      +'<input type="checkbox" class="cb" aria-label="'+esc(name)+' gemacht"'+(s.done?' checked':'')+'>'
+      +'<div><div class="nm">'+esc(name)+'</div><div class="tg">Ziel: '+esc(target)+'</div>'
+      +'<div class="fields">'
+      +'<label>Gewicht (kg)<input type="number" class="cw" step="0.5" min="0" inputmode="decimal" value="'+esc(s.weight??'')+'" placeholder="'+esc(ph)+'"></label>'
+      +'<label>Wdh. (bester Satz)<input type="number" class="cr" step="1" min="0" inputmode="numeric" value="'+esc(s.reps??'')+'"></label>'
+      +'<label>Notiz<input class="cn" maxlength="120" value="'+esc(s.note||'')+'"></label>'
+      +'</div></div></div>';
+  }).join('');
+}
+
+function renderPRs(){
+  const prs=rows.filter(x=>x.pr).slice(0,12);
+  $('prlist').innerHTML=prs.length?prs.map(x=>'<li><span>'+dmy(x.date)+'</span><strong>'+esc(x.exercise)+'</strong><span>'+(x.weight>0?fmt(x.weight)+' kg × '+x.reps:x.reps+' Wdh.')+'</span>'+(x.note?'<span class="meta">'+esc(x.note)+'</span>':'')+'</li>').join(''):'<li class="empty">Noch kein PR eingetragen.</li>';
+}
+
+function chart(b,unit){
+  if(!b.length) return '<p class="empty">Noch keine Daten.</p>';
+  const max=Math.max(...b.map(x=>x.value))*1.12;
+  const bars=b.map((x,i)=>'<div class="bar'+(i===b.length-1?' last':'')+'" style="height:'+(x.value/max*100).toFixed(1)+'%"><span>'+fmt(x.value)+'</span></div>').join('');
+  const axis=b.map(x=>'<div>'+esc(x.label)+'</div>').join('');
+  return '<div class="chart">'+bars+'</div><div class="axis">'+axis+'</div>';
+}
+
+function renderLift(id,name,goal){
+  const sets=rows.filter(x=>x.exercise===name&&x.weight>0&&x.reps>=1);
+  const byWeek={};
+  sets.forEach(x=>{const k=monday(x.date);if(!byWeek[k]||x.weight>byWeek[k])byWeek[k]=x.weight;});
+  const keys=Object.keys(byWeek).sort().slice(-12);
+  const top=sets.reduce((a,b)=>(!a||b.weight>a.weight)?b:a,null);
+  const buckets=keys.map(k=>({label:dmy(k).slice(0,5),value:byWeek[k]}));
+  $(id).innerHTML='<h2>'+esc(name)+'</h2><div class="big">'+(top?fmt(top.weight)+' kg':'–')+'</div><div class="meta">höchstes eingetragenes Gewicht, '+(top?'am '+dmy(top.date)+' · '+top.reps+' Wdh.'+(top.pr?' (PR)':''):'noch keine Daten')+' · '+esc(goal)+'</div>'+chart(buckets,'kg');
+}
+
+function renderPull(){
+  const sets=rows.filter(x=>x.exercise==='Klimmzug'&&!(x.weight>0)&&x.reps>=1);
+  const byWeek={};
+  sets.forEach(x=>{const k=monday(x.date);byWeek[k]=Math.max(byWeek[k]||0,x.reps);});
+  const keys=Object.keys(byWeek).sort().slice(-12);
+  const best=sets.length?Math.max(...sets.map(x=>x.reps)):null;
+  const buckets=keys.map(k=>({label:dmy(k).slice(0,5),value:byWeek[k]}));
+  $('c-pull').innerHTML='<h2>Klimmzüge strikt</h2><div class="big">'+(best==null?'–':best+' Wdh.')+'</div><div class="meta">beste Serie ohne Zusatzgewicht · Ziel 12–13 bis April</div>'+chart(buckets,'Wdh.');
+}
+
+function renderTable(){
+  $('none').hidden=rows.length>0;
+  tb.innerHTML=rows.filter(x=>!x.pr).slice(0,40).map(x=>'<tr><td>'+dmy(x.date)+'</td><td>'+esc(x.exercise)+'</td><td>'+fmt(x.weight||0)+'</td><td>'+esc(x.reps)+'</td><td>'+esc(x.rir??'–')+'</td><td class="note">'+esc(x.note||'')+'</td><td><button class="del" type="button" data-id="'+esc(x.id)+'">Löschen</button></td></tr>').join('');
+}
+
+function updateSelectors(){
+  const names=[...new Set([...EX.filter(x=>x!=='Eigene Übung'),...rows.map(x=>x.exercise)])];
+  const pv=vex.value||'Bankdrücken';
+  vex.innerHTML=names.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');
+  vex.value=names.includes(pv)?pv:names[0];
+  const ex=vex.value;
+  const reps=[...new Set(rows.filter(x=>x.exercise===ex&&x.weight>0&&x.reps>=1).map(x=>x.reps))].sort((a,b)=>a-b);
+  const prev=vrep.value||'alle';
+  vrep.innerHTML='<option value="alle">alle (höchstes Gewicht pro Tag)</option>'+reps.map(r=>'<option value="'+r+'">'+r+' Wdh.</option>').join('');
+  vrep.value=prev==='alle'||reps.map(String).includes(prev)?prev:'alle';
+  vrep.disabled=ex==='Klimmzug';
+}
+
+function renderGraph(){
+  const ex=vex.value, rp=vrep.value, isPull=ex==='Klimmzug';
+  const per={};
+  rows.forEach(x=>{
+    if(x.exercise!==ex||!x.date) return;
+    let v=null;
+    if(isPull){ if(!(x.weight>0)&&x.reps>=1) v=x.reps; }
+    else if(x.weight>0&&x.reps>=1){
+      if(rp==='alle'||String(x.reps)===rp) v=x.weight;
+    }
+    if(v==null) return;
+    const cur=per[x.date];
+    per[x.date]={v:Math.max(cur?cur.v:-Infinity,v),pr:!!((cur&&cur.pr)||x.pr)};
+  });
+  const pts=Object.keys(per).sort().map(d=>({d,v:per[d].v,pr:per[d].pr}));
+  const box=$('vgraph');
+  if(!pts.length){ box.innerHTML='<p class="empty">Noch keine Einträge für diese Auswahl.</p>'; return; }
+  const W=640,H=260,L=46,R=12,T=14,B=30;
+  const t0=parse(pts[0].d).getTime(), t1=parse(pts[pts.length-1].d).getTime();
+  let lo=Math.min(...pts.map(p=>p.v)), hi=Math.max(...pts.map(p=>p.v));
+  if(hi-lo<1){lo-=2;hi+=2;} else {const pd=(hi-lo)*.12;lo-=pd;hi+=pd;}
+  if(isPull) lo=Math.max(0,lo);
+  const X=p=>pts.length===1?(L+W-R)/2:L+(parse(p.d).getTime()-t0)/(t1-t0)*(W-L-R);
+  const Y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  let g='';
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v).toFixed(1);g+='<line class="gl" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text x="'+(L-6)+'" y="'+(+y+4)+'" text-anchor="end">'+fmt(v)+'</text>';}
+  const line=pts.map(p=>X(p).toFixed(1)+','+Y(p.v).toFixed(1)).join(' ');
+  const dots=pts.map(p=>'<circle class="'+(p.pr?'pr':'dot')+'" cx="'+X(p).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(p.pr?6:4)+'"><title>'+dmy(p.d)+': '+fmt(p.v)+(isPull?' Wdh.':' kg')+(p.pr?' (PR)':'')+'</title></circle>').join('');
+  const xl=pts.map((p,i)=>(i===0||i===pts.length-1)?'<text x="'+X(p).toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+(i===0?'start':'end')+'">'+dmy(p.d)+'</text>':'').join('');
+  const diff=pts[pts.length-1].v-pts[0].v;
+  const unit=isPull?' Wdh.':' kg';
+  let trend='';
+  if(pts.length>=4){
+    const xs=pts.map(p=>(parse(p.d).getTime()-t0)/864e5), ys=pts.map(p=>p.v);
+    const mx=xs.reduce((a,b)=>a+b,0)/xs.length, my=ys.reduce((a,b)=>a+b,0)/ys.length;
+    let cov=0, vr=0;
+    xs.forEach((x,i)=>{cov+=(x-mx)*(ys[i]-my);vr+=(x-mx)*(x-mx);});
+    if(xs[xs.length-1]-xs[0]>=14&&vr>0){
+      const slope=cov/vr, monthly=slope*30;
+      const target=new Date(parse(pts[pts.length-1].d).getTime()+28*864e5);
+      const proj=my+slope*((target.getTime()-t0)/864e5-mx);
+      trend='<div class="meta">Trend: '+(monthly>=0?'+':'')+fmt(monthly)+unit+' pro Monat. Voraussichtlich am '+dmy(ymd(target))+': ca. '+fmt(proj)+unit+' (Schätzung aus den bisherigen Einträgen).</div>';
+    }
+  }
+  const sum=pts.length>1?'Steigerung: '+(diff>=0?'+':'')+fmt(diff)+unit+' seit '+dmy(pts[0].d):'Ein Eintrag bisher';
+  box.innerHTML='<div class="meta">'+esc(sum)+'</div><svg class="graph" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Verlauf '+esc(ex)+'">'+g+'<polyline class="ln" points="'+line+'"/>'+dots+xl+'</svg><div class="meta">Größere Punkte = PR. Tippe auf einen Punkt für Datum und Wert.</div>'+trend;
+}
+
+function render(){
+  renderLift('c-bank','Bankdrücken','Ziel 100 kg');
+  renderLift('c-squat','Kniebeuge','Ziel nach Testwoche 1');
+  renderLift('c-dead','Kreuzheben','Ziel nach Testwoche 1');
+  renderPull();
+  renderPRs();
+  renderTable();
+  updateSelectors();
+  renderGraph();
+}
+</script>
+<script>
+// Lokale Datenhaltung (localStorage) mit derselben Schnittstelle wie die Artefakt-Datenbank.
+// Sync später: diese Funktion durch eine Server-Version ersetzen.
+function localDb(){
+  const KEY='physique-db-v1';
+  let data={};
+  try{data=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){data={};}
+  const subs=[];
+  const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}};
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const run=(name,q)=>{
+    let docs=Object.entries(data[name]||{}).map(([id,d])=>({id,d}));
+    if(q.order){const [f,dir]=q.order;docs.sort((a,b)=>{const x=a.d[f]??'',y=b.d[f]??'';if(x===y)return 0;const r=x<y?-1:1;return dir==='desc'?-r:r;});}
+    if(q.lim) docs=docs.slice(0,q.lim);
+    return {docs:docs.map(x=>({id:x.id,data:()=>x.d}))};
+  };
+  const notify=name=>subs.forEach(s=>{if(s.name===name)s.cb(run(name,s.q));});
+  const query=(name,q)=>({
+    orderBy:(f,dir='asc')=>query(name,{...q,order:[f,dir]}),
+    limit:n=>query(name,{...q,lim:n}),
+    get:()=>Promise.resolve(run(name,q)),
+    onSnapshot:cb=>{const s={name,q,cb};subs.push(s);setTimeout(()=>cb(run(name,q)),0);return()=>{const i=subs.indexOf(s);if(i>=0)subs.splice(i,1);};}
+  });
+  const col=name=>{
+    const doc=id=>({id,
+      set:d=>{data[name]=data[name]||{};data[name][id]=d;persist();notify(name);return Promise.resolve();},
+      delete:()=>{if(data[name]&&data[name][id]){delete data[name][id];persist();notify(name);}return Promise.resolve();}
+    });
+    return {...query(name,{}),doc,add:d=>{const id=uid();return doc(id).set(d).then(()=>({id}));}};
+  };
+  return {collection:col};
+}
+
+async function saveChecklist(){
+  if(!ready){cst.textContent='Speichern ist hier nicht verfügbar.';return;}
+  const d=parse(cdate.value), day=DAYS[d.getDay()];
+  if(!day){cst.textContent='Ruhetag, nichts zu speichern.';return;}
+  const date=ymd(d), items={};
+  checklist.querySelectorAll('.chk-item').forEach(el=>{
+    items[el.dataset.key]={
+      name:el.dataset.name, log:el.dataset.log,
+      done:el.querySelector('.cb').checked,
+      weight:parseFloat(el.querySelector('.cw').value)||0,
+      reps:parseInt(el.querySelector('.cr').value,10)||0,
+      note:el.querySelector('.cn').value.trim()
+    };
+  });
+  const btn=$('csave');
+  btn.disabled=true; cst.textContent='Speichere …';
+  try{
+    await checksCol.doc(date+'_'+day.k).set({date,day:day.k,items,saved:new Date().toISOString()});
+    await Promise.all(Object.values(items).map(it=>{
+      const ref=setsCol.doc(date+'_'+slug(it.log));
+      if(it.done&&it.reps>=1) return ref.set({date,exercise:it.log,weight:it.weight,reps:it.reps,note:it.note,source:'check',created:new Date().toISOString()});
+      return ref.delete();
+    }));
+    dirty=false;
+    cst.textContent='Gespeichert. Fortschritt ist aktualisiert.';
+  }catch(err){cst.textContent=msg(err);}
+  finally{btn.disabled=false;}
+}
+
+f.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!setsCol){st.textContent='Speichern ist hier nicht verfügbar.';return;}
+  const ex=exS.value==='Eigene Übung'?ownEl.value.trim():exS.value;
+  const r=parseInt(rEl.value,10), w=parseFloat(wEl.value)||0;
+  if(!ex){st.textContent='Übung angeben.';return;}
+  if(!(r>=1)||!dateEl.value){st.textContent='Datum und Wiederholungen angeben.';return;}
+  const data={date:dateEl.value,exercise:ex,weight:w,reps:r,note:noteEl.value.trim(),created:new Date().toISOString()};
+  if(rirEl.value!=='') data.rir=parseInt(rirEl.value,10);
+  st.textContent='Speichere …';
+  try{
+    await setsCol.add(data);
+    rEl.value='';noteEl.value='';rirEl.value='';
+    st.textContent='Gespeichert.';
+  }catch(err){st.textContent=msg(err);}
+});
+
+pf.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!setsCol){pst.textContent='Speichern ist hier nicht verfügbar.';return;}
+  const ex=pex.value, isPull=ex==='Klimmzug';
+  const w=parseFloat(pw.value)||0, r=parseInt(prr.value,10);
+  if(!pdate.value||!(r>=1)){pst.textContent='Datum und Wiederholungen angeben.';return;}
+  if(!(w>0)&&!isPull){pst.textContent='Gewicht angeben.';return;}
+  pst.textContent='Speichere …';
+  try{
+    await setsCol.add({date:pdate.value,exercise:ex,weight:isPull?0:w,reps:r,pr:true,note:pnote.value.trim(),created:new Date().toISOString()});
+    pw.value='';pnote.value='';
+    pst.textContent='PR gespeichert.';
+  }catch(err){pst.textContent=msg(err);}
+});
+
+tb.addEventListener('click',async e=>{
+  const b=e.target.closest('button.del');
+  if(!b||!setsCol) return;
+  if(!b.dataset.armed){
+    b.dataset.armed='1';b.textContent='Sicher?';
+    setTimeout(()=>{delete b.dataset.armed;b.textContent='Löschen';},3000);
+    return;
+  }
+  try{await setsCol.doc(b.dataset.id).delete();}catch(err){st.textContent=msg(err);}
+});
+
+$('csave').addEventListener('click',saveChecklist);
+cdate.addEventListener('change',()=>{dirty=false;renderChecklist();});
+checklist.addEventListener('input',()=>{dirty=true;});
+checklist.addEventListener('change',()=>{dirty=true;});
+vex.addEventListener('change',()=>{updateSelectors();renderGraph();});
+vrep.addEventListener('change',renderGraph);
+document.querySelectorAll('.clickable').forEach(c=>{
+  const go=()=>{vex.value=c.dataset.ex;vrep.value='alle';updateSelectors();renderGraph();$('verlauf').scrollIntoView({behavior:'smooth',block:'start'});};
+  c.addEventListener('click',go);
+  c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+});
+
+const opts=EX.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+exS.innerHTML=opts;
+pex.innerHTML=opts;
+exS.addEventListener('change',()=>{ownL.hidden=exS.value!=='Eigene Übung';});
+dateEl.value=ymd(new Date());
+pdate.value=ymd(new Date());
+cdate.value=ymd(nextTrainDate(new Date()));
+renderToday();
+renderChecklist();
+render();
+
+(async()=>{
+  const db=localDb();
+  ready=true;
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  checksCol=db.collection('checks');
+  setsCol=db.collection('sets');
+  checksCol.limit(500).onSnapshot(snap=>{
+    checksMap={};
+    snap.docs.forEach(d=>{checksMap[d.id]=d.data();});
+    if(!dirty) renderChecklist();
+  },err=>{cst.textContent=msg(err);});
+  setsCol.orderBy('date','desc').limit(1000).onSnapshot(snap=>{
+    rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.exercise&&x.date);
+    render();
+  },err=>{st.textContent=msg(err);});
+})();
+</script>
