@@ -79,6 +79,12 @@ svg.graph .pr{fill:var(--warn)}
   </header>
 
   <section class="card">
+    <h2>Anmeldung</h2>
+    <div id="authOut"></div>
+    <p class="meta" id="syncst"></p>
+  </section>
+
+  <section class="card">
     <h2>Trainingstag abhaken</h2>
     <div class="row2">
       <label style="min-width:180px">Datum<input type="date" id="cdate"></label>
@@ -284,8 +290,9 @@ svg.graph .pr{fill:var(--warn)}
     </details>
   </section>
 
-  <p class="meta">Deine Einträge liegen nur auf diesem Gerät. Synchronisierung kommt später.</p>
+  <p class="meta">Deine Einträge werden in deinem Supabase-Projekt gespeichert und sind nach der Anmeldung auf allen Geräten verfügbar.</p>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const EX=['Bankdrücken','Kniebeuge','Kreuzheben','Klimmzug','Klimmzug-Negatives','Hohe Klimmzüge','Schulterdrücken','Schrägbank','Dips','Trizepsdrücken','Überkopf-Trizeps','Seitheben','Pec Deck','Face Pulls','Rudern','Latzug','Kabelrudern','Langhantel-Curls','Hammer Curls','Preacher Curls','Bizeps-Curls KH','Eigene Übung'];
 // [Name in Liste, Name fürs Log, Ziel]
@@ -308,7 +315,7 @@ const monday=s=>{const d=parse(s);const dow=(d.getDay()+6)%7;return ymd(new Date
 const weekNo=s=>{const n=Math.round((parse(s)-START)/864e5);return n<0?0:Math.floor(n/7)+1};
 const e1=(w,r)=>w*(1+r/30);
 const fmt=v=>(Math.round(v*10)/10).toString().replace('.',',');
-const msg=e=>e&&e.code==='quota_exceeded'?'Speicher voll. Ältere Einträge löschen.':e&&e.code==='revoked'?'Der Zugriff wurde entzogen.':'Nicht gespeichert'+(e&&e.code?' ('+e.code+')':'')+'.';
+const msg=e=>e&&e.code==='nicht_angemeldet'?'Bitte zuerst oben anmelden.':e&&e.code==='quota_exceeded'?'Speicher voll. Ältere Einträge löschen.':e&&e.code==='revoked'?'Der Zugriff wurde entzogen.':'Nicht gespeichert'+(e&&e.code?' ('+e.code+')':'')+'.';
 const nextTrainDate=from=>{for(let i=0;i<7;i++){const d=new Date(from.getFullYear(),from.getMonth(),from.getDate()+i);if(DAYS[d.getDay()])return d;}return from;};
 
 const $=id=>document.getElementById(id);
@@ -459,40 +466,130 @@ function render(){
 }
 </script>
 <script>
-// Lokale Datenhaltung (localStorage) mit derselben Schnittstelle wie die Artefakt-Datenbank.
-// Sync später: diese Funktion durch eine Server-Version ersetzen.
+// Supabase-Verbindung. Der publishable key ist für die Seite gedacht und nicht geheim.
+const SB_URL='https://huzgvmeydwpauvdykmly.supabase.co';
+const SB_KEY='sb_publishable_RU6J9HWJ2i-GJFHbN1tBeA_eEQOS_pb';
+const CACHE_KEY='physique-cache-v2';
+let sb=null, user=null;
+let cache={sets:{},checks:{}};
+let pending=[];
+try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(c){cache=c.cache||cache;pending=c.pending||[];}}catch(e){}
+const persist=()=>{try{localStorage.setItem(CACHE_KEY,JSON.stringify({cache,pending}))}catch(e){}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const setStatus=t=>{const el=$('syncst');if(el)el.textContent=t;};
+
+const toRow={
+  sets:(id,d)=>({id,date:d.date,exercise:d.exercise,weight:d.weight??0,reps:d.reps,rir:d.rir??null,note:d.note||'',pr:!!d.pr,source:d.source||null}),
+  checks:(id,d)=>({id,date:d.date,day:d.day,items:d.items||{}})
+};
+const fromRow={
+  sets:r=>({date:r.date,exercise:r.exercise,weight:Number(r.weight),reps:r.reps,rir:r.rir,note:r.note||'',pr:!!r.pr,source:r.source,created:r.created_at}),
+  checks:r=>({date:r.date,day:r.day,items:r.items||{},saved:r.saved_at})
+};
+
+// Abfragen auf die lokale Kopie, damit die Ansicht sofort reagiert
+const SUBS=[];
+function runQ(name,q){
+  let docs=Object.entries(cache[name]||{}).map(([id,d])=>({id,d}));
+  if(q.order){const [f,dir]=q.order;docs.sort((a,b)=>{const x=a.d[f]??'',y=b.d[f]??'';if(x===y)return 0;const r=x<y?-1:1;return dir==='desc'?-r:r;});}
+  if(q.lim) docs=docs.slice(0,q.lim);
+  return {docs:docs.map(x=>({id:x.id,data:()=>x.d}))};
+}
+function notifyName(name){SUBS.forEach(s=>{if(s.name===name)s.cb(runQ(name,s.q));});}
+function notifyAll(){notifyName('sets');notifyName('checks');}
+
+// Warteschlange: Änderungen, die noch nicht bei Supabase angekommen sind
+function enqueue(p){
+  pending=pending.filter(x=>!(x.table===p.table&&x.id===p.id));
+  pending.push(p);
+  persist();
+}
+let flushing=false;
+async function flush(){
+  if(flushing||!sb||!user) return;
+  flushing=true;
+  try{
+    while(pending.length){
+      const p=pending[0];
+      const res=p.op==='up'
+        ? await sb.from(p.table).upsert(p.row)
+        : await sb.from(p.table).delete().eq('id',p.id);
+      if(res.error) throw res.error;
+      pending.shift(); persist();
+    }
+    setStatus('Synchronisiert. Stand: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr');
+  }catch(e){
+    setStatus('Noch nicht übertragen ('+(e.message||'Fehler')+'). Wird beim nächsten Versuch erneut gesendet.');
+  }finally{flushing=false;}
+}
+
+async function pullAll(){
+  const [s,c]=await Promise.all([sb.from('sets').select('*'),sb.from('checks').select('*')]);
+  if(s.error||c.error){setStatus('Laden fehlgeschlagen: '+((s.error||c.error).message));return;}
+  const sets={}, checks={};
+  s.data.forEach(r=>{sets[r.id]=fromRow.sets(r);});
+  c.data.forEach(r=>{checks[r.id]=fromRow.checks(r);});
+  // Noch nicht gesendete Änderungen auf den Stand legen
+  pending.forEach(p=>{
+    const target=p.table==='sets'?sets:checks;
+    if(p.op==='up') target[p.id]=p.doc; else delete target[p.id];
+  });
+  cache={sets,checks};
+  persist();
+  notifyAll();
+}
+
 function localDb(){
-  const KEY='physique-db-v1';
-  let data={};
-  try{data=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){data={};}
-  const subs=[];
-  const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}};
-  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-  const run=(name,q)=>{
-    let docs=Object.entries(data[name]||{}).map(([id,d])=>({id,d}));
-    if(q.order){const [f,dir]=q.order;docs.sort((a,b)=>{const x=a.d[f]??'',y=b.d[f]??'';if(x===y)return 0;const r=x<y?-1:1;return dir==='desc'?-r:r;});}
-    if(q.lim) docs=docs.slice(0,q.lim);
-    return {docs:docs.map(x=>({id:x.id,data:()=>x.d}))};
-  };
-  const notify=name=>subs.forEach(s=>{if(s.name===name)s.cb(run(name,s.q));});
   const query=(name,q)=>({
     orderBy:(f,dir='asc')=>query(name,{...q,order:[f,dir]}),
     limit:n=>query(name,{...q,lim:n}),
-    get:()=>Promise.resolve(run(name,q)),
-    onSnapshot:cb=>{const s={name,q,cb};subs.push(s);setTimeout(()=>cb(run(name,q)),0);return()=>{const i=subs.indexOf(s);if(i>=0)subs.splice(i,1);};}
+    get:()=>Promise.resolve(runQ(name,q)),
+    onSnapshot:cb=>{const s={name,q,cb};SUBS.push(s);setTimeout(()=>cb(runQ(name,q)),0);return()=>{const i=SUBS.indexOf(s);if(i>=0)SUBS.splice(i,1);};}
   });
   const col=name=>{
     const doc=id=>({id,
-      set:d=>{data[name]=data[name]||{};data[name][id]=d;persist();notify(name);return Promise.resolve();},
-      delete:()=>{if(data[name]&&data[name][id]){delete data[name][id];persist();notify(name);}return Promise.resolve();}
+      set:d=>{
+        if(!user) return Promise.reject({code:'nicht_angemeldet'});
+        cache[name]=cache[name]||{}; cache[name][id]=d; persist(); notifyName(name);
+        enqueue({op:'up',table:name,id,doc:d,row:toRow[name](id,d)}); flush();
+        return Promise.resolve();
+      },
+      delete:()=>{
+        if(!user) return Promise.reject({code:'nicht_angemeldet'});
+        if(cache[name]) delete cache[name][id];
+        persist(); notifyName(name);
+        enqueue({op:'del',table:name,id}); flush();
+        return Promise.resolve();
+      }
     });
     return {...query(name,{}),doc,add:d=>{const id=uid();return doc(id).set(d).then(()=>({id}));}};
   };
   return {collection:col};
 }
 
+// Anmeldung: E-Mail-Link, danach bleibt das Gerät angemeldet
+function updateAuthUI(){
+  const out=$('authOut');
+  if(user){
+    out.innerHTML='<p class="meta">Angemeldet als '+esc(user.email)+'</p><button type="button" id="lo" class="btn-sec">Abmelden</button>';
+  }else{
+    out.innerHTML='<form id="lf" class="row2"><label style="flex:1 1 260px">E-Mail<input type="email" id="lemail" required autocomplete="email"></label><button class="primary" type="submit">Anmelde-Link senden</button></form>';
+  }
+}
+$('authOut').addEventListener('submit',async e=>{
+  if(e.target.id!=='lf') return;
+  e.preventDefault();
+  const email=$('lemail').value.trim();
+  setStatus('Link wird gesendet …');
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0]}});
+  setStatus(error?'Fehler: '+error.message:'Link ist unterwegs. Öffne ihn auf diesem Gerät.');
+});
+$('authOut').addEventListener('click',async e=>{
+  if(e.target.id==='lo'){await sb.auth.signOut();}
+});
+
 async function saveChecklist(){
-  if(!ready){cst.textContent='Speichern ist hier nicht verfügbar.';return;}
+  if(!user){cst.textContent='Bitte zuerst oben anmelden.';return;}
   const d=parse(cdate.value), day=DAYS[d.getDay()];
   if(!day){cst.textContent='Ruhetag, nichts zu speichern.';return;}
   const date=ymd(d), items={};
@@ -522,7 +619,6 @@ async function saveChecklist(){
 
 f.addEventListener('submit',async e=>{
   e.preventDefault();
-  if(!setsCol){st.textContent='Speichern ist hier nicht verfügbar.';return;}
   const ex=exS.value==='Eigene Übung'?ownEl.value.trim():exS.value;
   const r=parseInt(rEl.value,10), w=parseFloat(wEl.value)||0;
   if(!ex){st.textContent='Übung angeben.';return;}
@@ -539,7 +635,6 @@ f.addEventListener('submit',async e=>{
 
 pf.addEventListener('submit',async e=>{
   e.preventDefault();
-  if(!setsCol){pst.textContent='Speichern ist hier nicht verfügbar.';return;}
   const ex=pex.value, isPull=ex==='Klimmzug';
   const w=parseFloat(pw.value)||0, r=parseInt(prr.value,10);
   if(!pdate.value||!(r>=1)){pst.textContent='Datum und Wiederholungen angeben.';return;}
@@ -554,7 +649,7 @@ pf.addEventListener('submit',async e=>{
 
 tb.addEventListener('click',async e=>{
   const b=e.target.closest('button.del');
-  if(!b||!setsCol) return;
+  if(!b) return;
   if(!b.dataset.armed){
     b.dataset.armed='1';b.textContent='Sicher?';
     setTimeout(()=>{delete b.dataset.armed;b.textContent='Löschen';},3000);
@@ -582,24 +677,40 @@ exS.addEventListener('change',()=>{ownL.hidden=exS.value!=='Eigene Übung';});
 dateEl.value=ymd(new Date());
 pdate.value=ymd(new Date());
 cdate.value=ymd(nextTrainDate(new Date()));
+updateAuthUI();
 renderToday();
 renderChecklist();
 render();
 
-(async()=>{
-  const db=localDb();
-  ready=true;
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-  checksCol=db.collection('checks');
-  setsCol=db.collection('sets');
-  checksCol.limit(500).onSnapshot(snap=>{
-    checksMap={};
-    snap.docs.forEach(d=>{checksMap[d.id]=d.data();});
-    if(!dirty) renderChecklist();
-  },err=>{cst.textContent=msg(err);});
-  setsCol.orderBy('date','desc').limit(1000).onSnapshot(snap=>{
-    rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.exercise&&x.date);
-    render();
-  },err=>{st.textContent=msg(err);});
-})();
+const db=localDb();
+setsCol=db.collection('sets');
+checksCol=db.collection('checks');
+setsCol.orderBy('date','desc').limit(1000).onSnapshot(snap=>{
+  rows=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.exercise&&x.date);
+  render();
+});
+checksCol.limit(500).onSnapshot(snap=>{
+  checksMap={};
+  snap.docs.forEach(d=>{checksMap[d.id]=d.data();});
+  if(!dirty) renderChecklist();
+});
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+if(window.supabase){
+  sb=window.supabase.createClient(SB_URL,SB_KEY);
+  sb.auth.onAuthStateChange(async(_event,session)=>{
+    user=session?session.user:null;
+    updateAuthUI();
+    if(user){
+      setStatus('Lade Daten …');
+      await pullAll();
+      await flush();
+    }else{
+      setStatus('Nicht angemeldet. Einträge werden erst nach der Anmeldung gespeichert.');
+    }
+  });
+}else{
+  setStatus('Keine Verbindung zu Supabase. Die Seite zeigt nur die lokale Kopie.');
+}
 </script>
