@@ -71,22 +71,31 @@ svg.graph .pr{fill:var(--warn)}
 .day ul{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:4px;font-size:14px}
 .day li b{display:inline-block;width:24px;color:var(--accent);font-weight:600}
 .day ul.more{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:8px;margin-bottom:0}
+details.card>summary{list-style:none;cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"▾";font-size:14px;transition:transform .15s}
+details.card[open]>summary{margin-bottom:12px}
+details.card[open]>summary::after{transform:rotate(180deg)}
+details.card>details{border:none;padding:8px 0}
+textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box;min-width:0}
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.plan-grid label{font-size:13px}
 </style>
 <main>
   <header>
     <h1>Physique Trainingslog</h1>
-    <p class="sub">Plan vom 24.10.2026 · Woche 1 beginnt Mo 26.10.2026 · Ende Bulk April 2027</p>
+    <p class="sub">Woche 1 beginnt Mo 26.10.2026 · Ende Bulk April 2027</p>
     <p class="today" id="today"></p>
   </header>
 
-  <section class="card">
-    <h2>Anmeldung</h2>
+  <details class="card" open>
+    <summary>Anmeldung</summary>
     <div id="authOut"></div>
     <p class="meta" id="syncst"></p>
-  </section>
+  </details>
 
-  <section class="card">
-    <h2>Trainingstag abhaken</h2>
+  <details class="card" open>
+    <summary>Trainingstag abhaken</summary>
     <div class="row2">
       <label style="min-width:180px">Datum<input type="date" id="cdate"></label>
       <span class="status" id="cday"></span>
@@ -94,10 +103,10 @@ svg.graph .pr{fill:var(--warn)}
     <div id="checklist"></div>
     <div class="row"><button class="primary" id="csave" type="button">Speichern</button><span class="status" id="cst" role="status"></span></div>
     <p class="meta">Ein Haken zählt als gemacht. Gewicht und Wiederholungen des besten Satzes werden für den Fortschritt übernommen. Nicht abgehakte Übungen fließen nicht in den Fortschritt ein.</p>
-  </section>
+  </details>
 
-  <section class="card">
-    <h2>Satz eintragen</h2>
+  <details class="card">
+    <summary>Satz eintragen</summary>
     <form id="f" class="form" autocomplete="off">
       <label>Datum<input type="date" id="date" required></label>
       <label>Übung<select id="ex"></select></label>
@@ -108,10 +117,10 @@ svg.graph .pr{fill:var(--warn)}
       <label style="grid-column:1/-1">Notiz<input id="note" maxlength="200"></label>
     </form>
     <div class="row"><button class="primary" form="f" type="submit">Speichern</button><span class="status" id="st" role="status"></span></div>
-  </section>
+  </details>
 
-  <section class="card">
-    <h2>PR eintragen</h2>
+  <details class="card">
+    <summary>PR eintragen</summary>
     <form id="pf" class="form" autocomplete="off">
       <label>Datum<input type="date" id="pdate" required></label>
       <label>Übung<select id="pex"></select></label>
@@ -122,10 +131,10 @@ svg.graph .pr{fill:var(--warn)}
     <div class="row"><button class="primary" form="pf" type="submit">PR speichern</button><span class="status" id="pst" role="status"></span></div>
     <p class="meta">Bei Klimmzügen Gewicht leer lassen und die Anzahl strikter Wiederholungen eintragen.</p>
     <ul class="prlist" id="prlist"></ul>
-  </section>
+  </details>
 
-  <section>
-    <h2>Fortschritt</h2>
+  <details class="card" open>
+    <summary>Fortschritt</summary>
     <div class="lifts">
       <div class="card clickable" id="c-bank" data-ex="Bankdrücken" role="button" tabindex="0"></div>
       <div class="card clickable" id="c-squat" data-ex="Kniebeuge" role="button" tabindex="0"></div>
@@ -133,19 +142,19 @@ svg.graph .pr{fill:var(--warn)}
       <div class="card clickable" id="c-pull" data-ex="Klimmzug" role="button" tabindex="0"></div>
     </div>
     <p class="meta">Tippe auf eine Karte, um ihren Verlauf unten anzuzeigen.</p>
-  </section>
+  </details>
 
-  <section class="card" id="verlauf">
-    <h2>Verlauf</h2>
+  <details class="card" id="verlauf">
+    <summary>Verlauf</summary>
     <div class="row2">
       <label>Übung<select id="vex"></select></label>
       <label>Wiederholungen<select id="vrep"></select></label>
     </div>
     <div id="vgraph"></div>
-  </section>
+  </details>
 
-  <section class="card">
-    <h2>Letzte Einträge</h2>
+  <details class="card">
+    <summary>Letzte Einträge</summary>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Datum</th><th>Übung</th><th>kg</th><th>Wdh.</th><th>RiR</th><th>Notiz</th><th></th></tr></thead>
@@ -153,90 +162,30 @@ svg.graph .pr{fill:var(--warn)}
       </table>
     </div>
     <p class="empty" id="none">Noch keine Einträge. Hake oben einen Trainingstag ab oder trag einen Satz ein.</p>
-  </section>
+  </details>
 
-  <section>
-    <h2>Wochenstruktur</h2>
-    <div class="card">
-      <p class="meta">Fünf Trainingstage, Do und So frei. Jede Hauptübung kommt 3× pro Woche vor: eine schwere Einheit (H, 3–5 Wdh.) und zwei Volumen-Einheiten (V, 6–8 Wdh.). Bei Bankdrücken und Kniebeuge steigt die Last um 2,5 kg, bei Kreuzheben um 5 kg, wenn das obere Ende der Spanne mit 2 Wdh. in Reserve erreicht ist.</p>
-      <div class="wk-sum">
-        <div><strong>Bankdrücken</strong><span>H Mo · V Di · V Fr</span></div>
-        <div><strong>Kniebeuge</strong><span>V Mo · H Mi · V Sa</span></div>
-        <div><strong>Kreuzheben</strong><span>H Di · V Mi · V Fr</span></div>
-      </div>
-      <div class="wk-days">
-        <article class="day">
-          <h3>Montag</h3>
-          <ul>
-            <li><b>H</b>Bankdrücken 4×4 · 72,5 kg</li>
-            <li><b>V</b>Kniebeuge 3×8 · 45–50 kg</li>
-          </ul>
-          <ul class="more">
-            <li>Schulterdrücken 3×8–12</li>
-            <li>Dips 3×8–12</li>
-            <li>Trizepsdrücken 3×10–15</li>
-            <li>Seitheben 3×12–20</li>
-          </ul>
-        </article>
-        <article class="day">
-          <h3>Dienstag</h3>
-          <ul>
-            <li><b>H</b>Kreuzheben 3×3–5 · 100 kg</li>
-            <li><b>V</b>Bankdrücken 3×6–8 · ca. 65 kg</li>
-          </ul>
-          <ul class="more">
-            <li>Klimmzüge 4 Sätze nah am Versagen</li>
-            <li>Rudern 3×8–12</li>
-            <li>Langhantel-Curls 3×10–12</li>
-          </ul>
-        </article>
-        <article class="day">
-          <h3>Mittwoch</h3>
-          <ul>
-            <li><b>H</b>Kniebeuge 4×4 · 55 → 60 kg</li>
-            <li><b>V</b>Kreuzheben 3×6–8 · ca. 90 kg</li>
-          </ul>
-          <ul class="more">
-            <li>Trizepsdrücken 3×12–15</li>
-            <li>Überkopf-Trizeps 3×10–15 (Kabel)</li>
-            <li>Bizeps-Curls KH 3×12–15</li>
-          </ul>
-        </article>
-        <article class="day">
-          <h3>Freitag</h3>
-          <ul>
-            <li><b>V</b>Bankdrücken 3×6–8 · ca. 65 kg</li>
-            <li><b>V</b>Kreuzheben 2×8 · ca. 90 kg</li>
-          </ul>
-          <ul class="more">
-            <li>Schrägbank 3×8–12</li>
-            <li>Pec Deck 3×10–15</li>
-            <li>Seitheben 4×12–20</li>
-            <li>Überkopf-Trizeps 3×10–15</li>
-            <li>Face Pulls 3×15–20</li>
-          </ul>
-        </article>
-        <article class="day">
-          <h3>Samstag</h3>
-          <ul>
-            <li><b>V</b>Kniebeuge 3×8 · 45–50 kg</li>
-          </ul>
-          <ul class="more">
-            <li>Klimmzug-Negatives 3×3</li>
-            <li>Hohe Klimmzüge 3×4</li>
-            <li>Latzug 3×10–15</li>
-            <li>Kabelrudern 3×12–15</li>
-            <li>Hammer Curls 3×10–12</li>
-            <li>Preacher Curls 3×10–12</li>
-          </ul>
-        </article>
-      </div>
-      <p class="meta" style="margin-top:14px">Direkte Sätze pro Woche: Bizeps 12 · Trizeps 12 · Schulter 10 (plus 3 Face Pulls). Klimmzüge, Dips und Bankdrücken wirken zusätzlich auf Arme und Schulter.</p>
+  <details class="card">
+    <summary>Wochenstruktur</summary>
+    <p class="meta">Fünf Trainingstage, Do und So frei. Jede Hauptübung kommt 3× pro Woche vor: eine schwere Einheit (H, 3–5 Wdh.) und zwei Volumen-Einheiten (V, 6–8 Wdh.).</p>
+    <div class="wk-sum" id="wksum"></div>
+    <div class="wk-days" id="wkdays"></div>
+  </details>
+
+  <details class="card">
+    <summary>Plan bearbeiten</summary>
+    <p class="meta">Eine Zeile pro Übung im Format <strong>Name | Name im Log | Ziel</strong>. Die letzten beiden Teile sind optional. Endet der Name auf „ H“ oder „ V“, erscheint die Übung in der Wochenstruktur als Hauptübung. Leere Tage sind frei.</p>
+    <div class="plan-grid">
+      <label>Montag<textarea class="pt" data-w="1" rows="8"></textarea></label>
+      <label>Dienstag<textarea class="pt" data-w="2" rows="8"></textarea></label>
+      <label>Mittwoch<textarea class="pt" data-w="3" rows="8"></textarea></label>
+      <label>Freitag<textarea class="pt" data-w="5" rows="8"></textarea></label>
+      <label>Samstag<textarea class="pt" data-w="6" rows="8"></textarea></label>
     </div>
-  </section>
+    <div class="row"><button class="primary" id="psave" type="button">Plan speichern</button><span class="status" id="pst2" role="status"></span></div>
+  </details>
 
-  <section class="card">
-    <h2>Trainingsplan</h2>
+  <details class="card">
+    <summary>Trainingsplan (Text)</summary>
     <details open>
       <summary>Ziele</summary>
       <ul>
@@ -264,6 +213,7 @@ svg.graph .pr{fill:var(--warn)}
     <details>
       <summary>Regeln und Check</summary>
       <ul>
+        <li><strong>Progression:</strong> Bankdrücken und Kniebeuge +2,5 kg, Kreuzheben +5 kg, wenn das obere Ende der Spanne mit 2 Wdh. in Reserve erreicht ist. Volumen-Einheiten +2,5 kg, wenn alle Sätze das obere Ende mit Reserve schaffen.</li>
         <li><strong>Schulter:</strong> Leichtes Ziehen während der Übung ist in Ordnung, wenn es am nächsten Tag weg ist. Bleibt der Schmerz, nimmt er zu, oder treten Taubheit oder Schwellung auf: Last reduzieren und ärztlich oder physiotherapeutisch abklären lassen.</li>
         <li><strong>Dips-Form:</strong> Schultern nach unten, weg von den Ohren. Oberkörper leicht nach vorne. Nur so tief, dass die Schultern nicht nach vorne ziehen. Kein Schwung.</li>
         <li><strong>Kniebeuge-Technik:</strong> Fußspitzen leicht nach außen, Knie folgen den Füßen, Brust oben, Becken kippt unten nicht weg. Einen Arbeitssatz pro Woche seitlich filmen.</li>
@@ -275,21 +225,14 @@ svg.graph .pr{fill:var(--warn)}
       <summary>Testwochen</summary>
       <p>Alle 6 Wochen eine Woche mit ca. 20 % weniger Sätzen: <strong>Woche 6</strong> ab Mo 30.11.2026, <strong>Woche 12</strong> ab Mo 11.01.2027, <strong>Woche 18</strong> ab Mo 22.02.2027, <strong>Woche 24</strong> ab Mo 05.04.2027.</p>
       <ul>
-        <li>Mo: Bankdrücken 5er-Satz mit Testlast (Bankdrücken nur mit Sicherheitsstangen oder Partner testen)</li>
+        <li>Mo: Bankdrücken 5er-Satz mit Testlast (nur mit Sicherheitsstangen oder Partner testen)</li>
         <li>Di: Klimmzug strikt maximal, Dead Hang</li>
         <li>Mi: Kniebeuge 5er-Satz mit Testlast</li>
         <li>Sa: Kreuzheben 3er-Satz mit Testlast</li>
       </ul>
       <p>Richtwerte Bankdrücken: Woche 12 ca. 80 kg für 5 Wdh., Woche 18 ca. 84 kg, Woche 24 ca. 86 kg. Klimmzüge: Woche 12 ca. 10 strikt, Woche 24 ca. 12–13.</p>
     </details>
-    <details>
-      <summary>Stand und offene Punkte</summary>
-      <ul>
-        <li>Eigene Hypertrophie-Übungen vom Nutzer noch ausstehend.</li>
-        <li>Bankdrücken-Programm von Quin Stott (59,99 USD, ohne Sätze und Wiederholungen): nicht blind kaufen. Vorher Sätze, Wiederholungen und eine Beispielwoche schriftlich anfragen.</li>
-      </ul>
-    </details>
-  </section>
+  </details>
 
   <p class="meta">Deine Einträge werden in deinem Supabase-Projekt gespeichert und sind nach der Anmeldung auf allen Geräten verfügbar.</p>
 </main>
@@ -297,7 +240,7 @@ svg.graph .pr{fill:var(--warn)}
 <script>
 const EX=['Bankdrücken','Kniebeuge','Kreuzheben','Klimmzug','Klimmzug-Negatives','Hohe Klimmzüge','Schulterdrücken','Schrägbank','Dips','Trizepsdrücken','Überkopf-Trizeps','Seitheben','Pec Deck','Face Pulls','Rudern','Latzug','Kabelrudern','Langhantel-Curls','Hammer Curls','Preacher Curls','Bizeps-Curls KH','Eigene Übung'];
 // [Name in Liste, Name fürs Log, Ziel]
-const DAYS={
+let DAYS={
   1:{k:'Mo',items:[['Bankdrücken H','Bankdrücken','4×4 · 72,5 kg'],['Kniebeuge V','Kniebeuge','3×8 · 45–50 kg'],['Schulterdrücken','Schulterdrücken','3×8–12'],['Dips','Dips','3×8–12'],['Trizepsdrücken','Trizepsdrücken','3×10–15'],['Seitheben','Seitheben','3×12–20']]},
   2:{k:'Di',items:[['Kreuzheben H','Kreuzheben','3×3–5 · 100 kg'],['Bankdrücken V','Bankdrücken','3×6–8 · ca. 65 kg'],['Klimmzüge','Klimmzug','4 Sätze nah am Versagen · Wdh. = bester Satz'],['Rudern','Rudern','3×8–12'],['Langhantel-Curls','Langhantel-Curls','3×10–12']]},
   3:{k:'Mi',items:[['Kniebeuge H','Kniebeuge','4×4 · 55 → 60 kg'],['Kreuzheben V','Kreuzheben','3×6–8 · ca. 90 kg'],['Trizepsdrücken','Trizepsdrücken','3×12–15'],['Überkopf-Trizeps','Überkopf-Trizeps','3×10–15 · Kabel'],['Bizeps-Curls KH','Bizeps-Curls KH','3×12–15']]},
@@ -464,6 +407,7 @@ function render(){
   renderTable();
   updateSelectors();
   renderGraph();
+  if(typeof renderWeek==='function') renderWeek();
 }
 </script>
 <script>
@@ -535,7 +479,7 @@ async function pullAll(){
     const target=p.table==='sets'?sets:checks;
     if(p.op==='up') target[p.id]=p.doc; else delete target[p.id];
   });
-  cache={sets,checks};
+  cache={sets,checks,owner:user.id};
   persist();
   notifyAll();
 }
@@ -588,6 +532,68 @@ $('authOut').addEventListener('submit',async e=>{
 $('authOut').addEventListener('click',async e=>{
   if(e.target.id==='lo'){await sb.auth.signOut();}
 });
+
+// Wochentage und Plan pro Nutzer. Der Plan wird in der Tabelle "plans" gespeichert.
+const DAYK={1:'Mo',2:'Di',3:'Mi',5:'Fr',6:'Sa'};
+const DAYNAME={1:'Montag',2:'Dienstag',3:'Mittwoch',5:'Freitag',6:'Samstag'};
+const DEFAULT_PLAN=Object.fromEntries(Object.entries(DAYS).map(([w,d])=>[w,d.items]));
+function buildDays(plan){
+  const out={};
+  Object.keys(DAYK).forEach(w=>{out[w]={k:DAYK[w],items:(plan[w]||[]).map(([n,l,t])=>[n,l||n,t||''])};});
+  return out;
+}
+function planLine(n,l,t){return n+(((l&&l!==n)||t)?' | '+(l||n):'')+(t?' | '+t:'');}
+function fillPlanEditor(){
+  document.querySelectorAll('.pt').forEach(ta=>{
+    const d=DAYS[ta.dataset.w];
+    ta.value=d?d.items.map(([n,l,t])=>planLine(n,l,t)).join('\n'):'';
+  });
+}
+function parsePlanText(text){
+  return text.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+    const p=l.split('|').map(s=>s.trim());
+    return [p[0],p[1]||p[0],p[2]||''];
+  }).filter(x=>x[0]);
+}
+async function loadPlan(){
+  const {data,error}=await sb.from('plans').select('days').maybeSingle();
+  if(error){setStatus('Plan konnte nicht geladen werden: '+error.message);return;}
+  let plan=data?data.days:null;
+  if(!plan){
+    plan=DEFAULT_PLAN;
+    const r=await sb.from('plans').upsert({user_id:user.id,days:plan,updated_at:new Date().toISOString()});
+    if(r.error) setStatus('Plan konnte nicht angelegt werden: '+r.error.message);
+  }
+  DAYS=buildDays(plan);
+  fillPlanEditor(); renderToday(); renderChecklist(); render();
+}
+async function savePlan(){
+  if(!user){$('pst2').textContent='Bitte zuerst oben anmelden.';return;}
+  const plan={};
+  document.querySelectorAll('.pt').forEach(ta=>{plan[ta.dataset.w]=parsePlanText(ta.value);});
+  $('pst2').textContent='Speichere …';
+  const {error}=await sb.from('plans').upsert({user_id:user.id,days:plan,updated_at:new Date().toISOString()});
+  if(error){$('pst2').textContent='Nicht gespeichert: '+error.message;return;}
+  DAYS=buildDays(plan);
+  renderToday(); renderChecklist(); render();
+  $('pst2').textContent='Plan gespeichert.';
+}
+function renderWeek(){
+  const mains={};
+  const main=(w)=>DAYS[w].items.filter(x=>/ [HV]$/.test(x[0]));
+  const cards=Object.keys(DAYK).map(w=>{
+    const d=DAYS[w];
+    const mn=main(w), more=d.items.filter(x=>!/ [HV]$/.test(x[0]));
+    mn.forEach(x=>{const m=x[0].match(/^(.*) ([HV])$/);(mains[m[1]]=mains[m[1]]||[]).push(DAYK[w]+' '+m[2]);});
+    return '<article class="day"><h3>'+DAYNAME[w]+'</h3>'
+      +(mn.length?'<ul>'+mn.map(x=>{const m=x[0].match(/^(.*) ([HV])$/);return '<li><b>'+m[2]+'</b>'+esc(m[1])+(x[2]?' · '+esc(x[2]):'')+'</li>';}).join('')+'</ul>':'')
+      +(more.length?'<ul class="more">'+more.map(x=>'<li>'+esc(x[0])+(x[2]?' · '+esc(x[2]):'')+'</li>').join('')+'</ul>':'')
+      +(!d.items.length?'<p class="meta">Frei</p>':'')
+      +'</article>';
+  }).join('');
+  $('wkdays').innerHTML=cards;
+  $('wksum').innerHTML=Object.keys(mains).map(n=>'<div><strong>'+esc(n)+'</strong><span>'+esc(mains[n].join(' · '))+'</span></div>').join('');
+}
 
 async function saveChecklist(){
   if(!user){cst.textContent='Bitte zuerst oben anmelden.';return;}
@@ -660,6 +666,7 @@ tb.addEventListener('click',async e=>{
 });
 
 $('csave').addEventListener('click',saveChecklist);
+$('psave').addEventListener('click',savePlan);
 cdate.addEventListener('change',()=>{dirty=false;renderChecklist();});
 checklist.addEventListener('input',()=>{dirty=true;});
 checklist.addEventListener('change',()=>{dirty=true;});
@@ -704,10 +711,14 @@ if(window.supabase){
     user=session?session.user:null;
     updateAuthUI();
     if(user){
+      if(cache.owner!==user.id){cache={sets:{},checks:{},owner:user.id};pending=[];persist();}
       setStatus('Lade Daten …');
+      await loadPlan();
       await pullAll();
       await flush();
     }else{
+      DAYS=buildDays(DEFAULT_PLAN);
+      fillPlanEditor(); renderToday(); renderChecklist(); render();
       setStatus('Nicht angemeldet. Einträge werden erst nach der Anmeldung gespeichert.');
     }
   });
