@@ -84,6 +84,26 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 .prow input{padding:8px}
 .pdel{width:auto;padding:6px 10px;color:var(--warn);background:none;cursor:pointer}
 @media (max-width:560px){.prow{grid-template-columns:1fr 1fr auto}.prow .pn{grid-column:1/-1}}
+.who{display:none;font-size:13px;color:var(--muted);margin:0}
+.howto{display:none;background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.howto ol{margin:6px 0;padding-left:20px}
+.howto code{font-size:13px;font-variant-numeric:tabular-nums}
+@media (min-width:900px){
+  .who{display:block;order:1}
+  .howto{display:block}
+  #sec-auth{order:20}
+  #sec-week{order:2}
+  #sec-check{order:3}
+  #sec-satz{order:4}
+  #sec-pr{order:5}
+  #sec-prog{order:10}
+  #verlauf{order:11}
+  #sec-last{order:12}
+  #sec-plan{order:13}
+  #sec-text{order:14}
+  main>p:last-child{order:21}
+  details.pin>summary{display:none}
+}
 </style>
 <main>
   <header>
@@ -92,13 +112,15 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <p class="today" id="today"></p>
   </header>
 
-  <details class="card" open>
+  <details class="card" id="sec-auth" open>
     <summary>Anmeldung</summary>
     <div id="authOut"></div>
     <p class="meta" id="syncst"></p>
   </details>
 
-  <details class="card" open>
+  <p class="who" id="who">Nicht angemeldet</p>
+
+  <details class="card" id="sec-check" open>
     <summary>Trainingstag abhaken</summary>
     <div class="row2">
       <label style="min-width:180px">Datum<input type="date" id="cdate"></label>
@@ -109,7 +131,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <p class="meta">Ein Haken zählt als gemacht. Gewicht und Wiederholungen des besten Satzes werden für den Fortschritt übernommen. Nicht abgehakte Übungen fließen nicht in den Fortschritt ein.</p>
   </details>
 
-  <details class="card">
+  <details class="card" id="sec-satz">
     <summary>Satz eintragen</summary>
     <form id="f" class="form" autocomplete="off">
       <label>Datum<input type="date" id="date" required></label>
@@ -123,7 +145,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <div class="row"><button class="primary" form="f" type="submit">Speichern</button><span class="status" id="st" role="status"></span></div>
   </details>
 
-  <details class="card">
+  <details class="card" id="sec-pr">
     <summary>PR eintragen</summary>
     <form id="pf" class="form" autocomplete="off">
       <label>Datum<input type="date" id="pdate" required></label>
@@ -137,7 +159,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <ul class="prlist" id="prlist"></ul>
   </details>
 
-  <details class="card" open>
+  <details class="card" id="sec-prog" open>
     <summary>Fortschritt</summary>
     <div class="lifts">
       <div class="card clickable" id="c-bank" data-ex="Bankdrücken" role="button" tabindex="0"></div>
@@ -157,7 +179,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <div id="vgraph"></div>
   </details>
 
-  <details class="card">
+  <details class="card" id="sec-last">
     <summary>Letzte Einträge</summary>
     <div class="tablewrap">
       <table>
@@ -168,21 +190,30 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <p class="empty" id="none">Noch keine Einträge. Hake oben einen Trainingstag ab oder trag einen Satz ein.</p>
   </details>
 
-  <details class="card">
+  <details class="card pin" id="sec-week" open>
     <summary>Wochenstruktur</summary>
     <p class="meta">Fünf Trainingstage, Do und So frei. Jede Hauptübung kommt 3× pro Woche vor: eine schwere Einheit (H, 3–5 Wdh.) und zwei Volumen-Einheiten (V, 6–8 Wdh.).</p>
     <div class="wk-sum" id="wksum"></div>
     <div class="wk-days" id="wkdays"></div>
   </details>
 
-  <details class="card">
+  <details class="card pin" id="sec-plan" open>
     <summary>Plan bearbeiten</summary>
-    <p class="meta">Ändere Sätze und Wiederholungen direkt. Mit „+ Übung hinzufügen“ kommt eine Übung dazu, mit ✕ fliegt sie raus. Das Feld „Name im Log“ brauchst du nur für die Diagramme: Bei Klimmzügen steht dort <strong>Klimmzug</strong>. Endet der Name auf „ H“ oder „ V“, erscheint die Übung in der Wochenstruktur als Hauptübung.</p>
+    <div class="howto">
+      <p><strong>So änderst du den Plan:</strong></p>
+      <ol>
+        <li>In einem Tag das Feld <em>Sätze und Wiederholungen</em> antippen und zum Beispiel <code>2×8–12</code> eintragen.</li>
+        <li>Mit <em>+ Übung hinzufügen</em> kommt eine leere Zeile dazu. Name und Sätze eintragen.</li>
+        <li>Mit ✕ entfernst du eine Übung.</li>
+        <li>Unten auf <em>Plan speichern</em> klicken. Die Wochenstruktur und die Trainingstage aktualisieren sich dann.</li>
+      </ol>
+      <p class="meta">Das Feld „Name im Log“ brauchst du nur für die Diagramme. Bei Klimmzügen steht dort <strong>Klimmzug</strong>.</p>
+    </div>
     <div id="planGrid"></div>
     <div class="row"><button class="primary" id="psave" type="button">Plan speichern</button><span class="status" id="pst2" role="status"></span></div>
   </details>
 
-  <details class="card">
+  <details class="card" id="sec-text">
     <summary>Trainingsplan (Text)</summary>
     <details open>
       <summary>Ziele</summary>
@@ -734,6 +765,7 @@ if(window.supabase){
   sb=window.supabase.createClient(SB_URL,SB_KEY);
   sb.auth.onAuthStateChange(async(_event,session)=>{
     user=session?session.user:null;
+    $('who').textContent=user?'Angemeldet als '+user.email:'Nicht angemeldet';
     updateAuthUI();
     if(user){
       if(cache.owner!==user.id){cache={sets:{},checks:{},owner:user.id};pending=[];persist();}
