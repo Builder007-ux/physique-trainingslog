@@ -78,8 +78,12 @@ details.card[open]>summary{margin-bottom:12px}
 details.card[open]>summary::after{transform:rotate(180deg)}
 details.card>details{border:none;padding:8px 0}
 textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box;min-width:0}
-.plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.plan-grid label{font-size:13px}
+.pday{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px}
+.pday h3{margin:0 0 8px;font-size:16px}
+.prow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;margin-bottom:8px;align-items:center}
+.prow input{padding:8px}
+.pdel{width:auto;padding:6px 10px;color:var(--warn);background:none;cursor:pointer}
+@media (max-width:560px){.prow{grid-template-columns:1fr 1fr auto}.prow .pn{grid-column:1/-1}}
 </style>
 <main>
   <header>
@@ -173,14 +177,8 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 
   <details class="card">
     <summary>Plan bearbeiten</summary>
-    <p class="meta">Eine Zeile pro Übung im Format <strong>Name | Name im Log | Ziel</strong>. Die letzten beiden Teile sind optional. Endet der Name auf „ H“ oder „ V“, erscheint die Übung in der Wochenstruktur als Hauptübung. Leere Tage sind frei.</p>
-    <div class="plan-grid">
-      <label>Montag<textarea class="pt" data-w="1" rows="8"></textarea></label>
-      <label>Dienstag<textarea class="pt" data-w="2" rows="8"></textarea></label>
-      <label>Mittwoch<textarea class="pt" data-w="3" rows="8"></textarea></label>
-      <label>Freitag<textarea class="pt" data-w="5" rows="8"></textarea></label>
-      <label>Samstag<textarea class="pt" data-w="6" rows="8"></textarea></label>
-    </div>
+    <p class="meta">Ändere Sätze und Wiederholungen direkt. Mit „+ Übung hinzufügen“ kommt eine Übung dazu, mit ✕ fliegt sie raus. Das Feld „Name im Log“ brauchst du nur für die Diagramme: Bei Klimmzügen steht dort <strong>Klimmzug</strong>. Endet der Name auf „ H“ oder „ V“, erscheint die Übung in der Wochenstruktur als Hauptübung.</p>
+    <div id="planGrid"></div>
     <div class="row"><button class="primary" id="psave" type="button">Plan speichern</button><span class="status" id="pst2" role="status"></span></div>
   </details>
 
@@ -543,12 +541,39 @@ function buildDays(plan){
   return out;
 }
 function planLine(n,l,t){return n+(((l&&l!==n)||t)?' | '+(l||n):'')+(t?' | '+t:'');}
-function fillPlanEditor(){
-  document.querySelectorAll('.pt').forEach(ta=>{
-    const d=DAYS[ta.dataset.w];
-    ta.value=d?d.items.map(([n,l,t])=>planLine(n,l,t)).join('\n'):'';
-  });
+const PLAN_DAYS=[[1,'Montag'],[2,'Dienstag'],[3,'Mittwoch'],[5,'Freitag'],[6,'Samstag']];
+function prowHtml(n,t,l){
+  return '<div class="prow"><input class="pn" aria-label="Übung" placeholder="Übung" value="'+esc(n)+'"><input class="ps" aria-label="Sätze und Wiederholungen" placeholder="3×8–12" value="'+esc(t)+'"><input class="pl" aria-label="Name im Log" placeholder="Name im Log" value="'+esc(l)+'"><button class="pdel" type="button" aria-label="Übung entfernen">✕</button></div>';
 }
+function fillPlanEditor(){
+  $('planGrid').innerHTML=PLAN_DAYS.map(([w,name])=>{
+    const d=DAYS[w]||{items:[]};
+    return '<section class="pday" data-w="'+w+'"><h3>'+name+'</h3><div class="prows">'
+      +d.items.map(([n,l,t])=>prowHtml(n,t,l===n?'':l)).join('')
+      +'</div><button class="btn-sec padd" type="button" style="width:auto">+ Übung hinzufügen</button></section>';
+  }).join('');
+}
+function readPlanGrid(){
+  const plan={};
+  document.querySelectorAll('#planGrid .pday').forEach(sec=>{
+    plan[sec.dataset.w]=[...sec.querySelectorAll('.prow')].map(r=>{
+      const n=r.querySelector('.pn').value.trim();
+      const t=r.querySelector('.ps').value.trim();
+      const l=r.querySelector('.pl').value.trim();
+      return [n,l||n,t];
+    }).filter(x=>x[0]);
+  });
+  return plan;
+}
+$('planGrid').addEventListener('click',e=>{
+  const del=e.target.closest('.pdel'), add=e.target.closest('.padd');
+  if(del){del.closest('.prow').remove();return;}
+  if(add){
+    const box=add.closest('.pday').querySelector('.prows');
+    box.insertAdjacentHTML('beforeend',prowHtml('','',''));
+    box.lastElementChild.querySelector('.pn').focus();
+  }
+});
 function parsePlanText(text){
   return text.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
     const p=l.split('|').map(s=>s.trim());
@@ -570,7 +595,7 @@ async function loadPlan(){
 async function savePlan(){
   if(!user){$('pst2').textContent='Bitte zuerst oben anmelden.';return;}
   const plan={};
-  document.querySelectorAll('.pt').forEach(ta=>{plan[ta.dataset.w]=parsePlanText(ta.value);});
+  Object.assign(plan,readPlanGrid());
   $('pst2').textContent='Speichere …';
   const {error}=await sb.from('plans').upsert({user_id:user.id,days:plan,updated_at:new Date().toISOString()});
   if(error){$('pst2').textContent='Nicht gespeichert: '+error.message;return;}
