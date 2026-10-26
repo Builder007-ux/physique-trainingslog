@@ -85,6 +85,12 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 .pdel{width:auto;padding:6px 10px;color:var(--warn);background:none;cursor:pointer}
 @media (max-width:560px){.prow{grid-template-columns:1fr 1fr auto}.prow .pn{grid-column:1/-1}}
 .who{display:none;font-size:13px;color:var(--muted);margin:0}
+.ptab{width:100%;border-collapse:collapse;font-size:14px}
+.ptab th,.ptab td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;white-space:normal}
+.ptab th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.ptab input{padding:6px 8px;width:100%;margin-bottom:4px}
+.ptab .acts{white-space:nowrap;text-align:right}
+.ptab .acts button{width:auto;padding:6px 10px;margin-left:2px;cursor:pointer}
 .howto{display:none;background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:14px}
 .howto ol{margin:6px 0;padding-left:20px}
 .howto code{font-size:13px;font-variant-numeric:tabular-nums}
@@ -199,18 +205,9 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 
   <details class="card pin" id="sec-plan" open>
     <summary>Plan bearbeiten</summary>
-    <div class="howto">
-      <p><strong>So änderst du den Plan:</strong></p>
-      <ol>
-        <li>In einem Tag das Feld <em>Sätze und Wiederholungen</em> antippen und zum Beispiel <code>2×8–12</code> eintragen.</li>
-        <li>Mit <em>+ Übung hinzufügen</em> kommt eine leere Zeile dazu. Name und Sätze eintragen.</li>
-        <li>Mit ✕ entfernst du eine Übung.</li>
-        <li>Unten auf <em>Plan speichern</em> klicken. Die Wochenstruktur und die Trainingstage aktualisieren sich dann.</li>
-      </ol>
-      <p class="meta">Das Feld „Name im Log“ brauchst du nur für die Diagramme. Bei Klimmzügen steht dort <strong>Klimmzug</strong>.</p>
-    </div>
+    <p class="meta">So geht's: Bei einer Übung auf <strong>Bearbeiten</strong> tippen, Name oder Sätze ändern und auf <strong>Speichern</strong> drücken. Mit <strong>Löschen</strong> entfernst du sie (zweimal tippen). Jede Änderung wird sofort gespeichert. Der Name im Log ist nur für die Diagramme wichtig, bei Klimmzügen steht dort „Klimmzug“.</p>
     <div id="planGrid"></div>
-    <div class="row"><button class="primary" id="psave" type="button">Plan speichern</button><span class="status" id="pst2" role="status"></span></div>
+    <span class="status" id="pst2" role="status"></span>
   </details>
 
   <details class="card" id="sec-text">
@@ -573,36 +570,75 @@ function buildDays(plan){
 }
 function planLine(n,l,t){return n+(((l&&l!==n)||t)?' | '+(l||n):'')+(t?' | '+t:'');}
 const PLAN_DAYS=[[1,'Montag'],[2,'Dienstag'],[3,'Mittwoch'],[5,'Freitag'],[6,'Samstag']];
-function prowHtml(n,t,l){
-  return '<div class="prow"><input class="pn" aria-label="Übung" placeholder="Übung" value="'+esc(n)+'"><input class="ps" aria-label="Sätze und Wiederholungen" placeholder="3×8–12" value="'+esc(t)+'"><input class="pl" aria-label="Name im Log" placeholder="Name im Log" value="'+esc(l)+'"><button class="pdel" type="button" aria-label="Übung entfernen">✕</button></div>';
-}
+let planDraft={};
+let planEdit=null;
 function fillPlanEditor(){
+  planDraft={};
+  PLAN_DAYS.forEach(([w])=>{planDraft[w]=(DAYS[w]?DAYS[w].items:[]).map(([n,l,t])=>[n,l,t]);});
+  planEdit=null;
+  renderPlanEditor();
+}
+function renderPlanEditor(){
   $('planGrid').innerHTML=PLAN_DAYS.map(([w,name])=>{
-    const d=DAYS[w]||{items:[]};
-    return '<section class="pday" data-w="'+w+'"><h3>'+name+'</h3><div class="prows">'
-      +d.items.map(([n,l,t])=>prowHtml(n,t,l===n?'':l)).join('')
-      +'</div><button class="btn-sec padd" type="button" style="width:auto">+ Übung hinzufügen</button></section>';
+    const rows=planDraft[w].map((it,i)=>{
+      if(planEdit&&planEdit.w==w&&planEdit.i===i){
+        return '<tr><td><input class="pe-n" aria-label="Übung" placeholder="Übung" value="'+esc(it[0])+'"><input class="pe-l" aria-label="Name im Log" placeholder="Name im Log (optional)" value="'+esc(it[1]===it[0]?'':it[1])+'"></td>'
+          +'<td><input class="pe-t" aria-label="Sätze und Wiederholungen" placeholder="3×8–12" value="'+esc(it[2])+'"></td>'
+          +'<td class="acts"><button type="button" data-act="save" data-w="'+w+'" data-i="'+i+'">Speichern</button> <button type="button" class="btn-sec" data-act="cancel" data-w="'+w+'" data-i="'+i+'">Abbrechen</button></td></tr>';
+      }
+      return '<tr><td>'+esc(it[0])+'</td><td>'+esc(it[2])+'</td>'
+        +'<td class="acts"><button type="button" class="btn-sec" data-act="edit" data-w="'+w+'" data-i="'+i+'">Bearbeiten</button> <button type="button" class="btn-sec pdel" data-act="del" data-w="'+w+'" data-i="'+i+'">Löschen</button></td></tr>';
+    }).join('');
+    return '<section class="pday"><h3>'+name+'</h3>'
+      +(planDraft[w].length?'<table class="ptab"><thead><tr><th>Übung</th><th>Sätze × Wdh.</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>':'<p class="meta">Frei, keine Übungen.</p>')
+      +'<button type="button" class="btn-sec" data-act="add" data-w="'+w+'" style="width:auto;margin-top:8px">+ Übung hinzufügen</button></section>';
   }).join('');
 }
-function readPlanGrid(){
+async function persistPlan(){
   const plan={};
-  document.querySelectorAll('#planGrid .pday').forEach(sec=>{
-    plan[sec.dataset.w]=[...sec.querySelectorAll('.prow')].map(r=>{
-      const n=r.querySelector('.pn').value.trim();
-      const t=r.querySelector('.ps').value.trim();
-      const l=r.querySelector('.pl').value.trim();
-      return [n,l||n,t];
-    }).filter(x=>x[0]);
-  });
-  return plan;
+  PLAN_DAYS.forEach(([w])=>{plan[w]=planDraft[w].filter(x=>x[0]);});
+  DAYS=buildDays(plan);
+  renderToday(); renderChecklist(); render();
+  renderPlanEditor();
+  if(!user){$('pst2').textContent='Nur lokal. Bitte zuerst anmelden, damit der Plan gespeichert wird.';return;}
+  $('pst2').textContent='Speichere …';
+  const {error}=await sb.from('plans').upsert({user_id:user.id,days:plan,updated_at:new Date().toISOString()});
+  $('pst2').textContent=error?'Nicht gespeichert: '+error.message:'Gespeichert.';
 }
-$('planGrid').addEventListener('click',e=>{
-  const del=e.target.closest('.pdel'), add=e.target.closest('.padd');
-  if(del){del.closest('.prow').remove();return;}
-  if(add){
-    const box=add.closest('.pday').querySelector('.prows');
-    box.insertAdjacentHTML('beforeend',prowHtml('','',''));
-    box.lastElementChild.querySelector('.pn').focus();
+$('planGrid').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-act]');
+  if(!b) return;
+  const w=b.dataset.w, i=Number(b.dataset.i), act=b.dataset.act;
+  if(act==='add'){
+    planDraft[w].push(['','','']);
+    planEdit={w,i:planDraft[w].length-1,isNew:true};
+    renderPlanEditor();
+    const first=$('planGrid').querySelector('.pe-n'); if(first) first.focus();
+    return;
+  }
+  if(act==='edit'){ planEdit={w,i}; renderPlanEditor(); return; }
+  if(act==='cancel'){
+    if(planEdit&&planEdit.isNew) planDraft[w].splice(i,1);
+    planEdit=null; renderPlanEditor(); return;
+  }
+  if(act==='save'){
+    const row=b.closest('tr');
+    const n=row.querySelector('.pe-n').value.trim();
+    if(!n){ $('pst2').textContent='Bitte einen Namen eintragen.'; return; }
+    const t=row.querySelector('.pe-t').value.trim();
+    const l=row.querySelector('.pe-l').value.trim();
+    planDraft[w][i]=[n,l||n,t];
+    planEdit=null;
+    await persistPlan(); return;
+  }
+  if(act==='del'){
+    if(!b.dataset.armed){
+      b.dataset.armed='1'; b.textContent='Sicher?';
+      setTimeout(()=>{delete b.dataset.armed;b.textContent='Löschen';},3000);
+      return;
+    }
+    planDraft[w].splice(i,1); planEdit=null;
+    await persistPlan();
   }
 });
 function parsePlanText(text){
@@ -622,17 +658,6 @@ async function loadPlan(){
   }
   DAYS=buildDays(plan);
   fillPlanEditor(); renderToday(); renderChecklist(); render();
-}
-async function savePlan(){
-  if(!user){$('pst2').textContent='Bitte zuerst oben anmelden.';return;}
-  const plan={};
-  Object.assign(plan,readPlanGrid());
-  $('pst2').textContent='Speichere …';
-  const {error}=await sb.from('plans').upsert({user_id:user.id,days:plan,updated_at:new Date().toISOString()});
-  if(error){$('pst2').textContent='Nicht gespeichert: '+error.message;return;}
-  DAYS=buildDays(plan);
-  renderToday(); renderChecklist(); render();
-  $('pst2').textContent='Plan gespeichert.';
 }
 function renderWeek(){
   const mains={};
@@ -722,7 +747,6 @@ tb.addEventListener('click',async e=>{
 });
 
 $('csave').addEventListener('click',saveChecklist);
-$('psave').addEventListener('click',savePlan);
 cdate.addEventListener('change',()=>{dirty=false;renderChecklist();});
 checklist.addEventListener('input',()=>{dirty=true;});
 checklist.addEventListener('change',()=>{dirty=true;});
@@ -742,6 +766,7 @@ dateEl.value=ymd(new Date());
 pdate.value=ymd(new Date());
 cdate.value=ymd(nextTrainDate(new Date()));
 updateAuthUI();
+fillPlanEditor();
 renderToday();
 renderChecklist();
 render();
