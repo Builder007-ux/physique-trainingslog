@@ -85,12 +85,28 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 .pdel{width:auto;padding:6px 10px;color:var(--warn);background:none;cursor:pointer}
 @media (max-width:560px){.prow{grid-template-columns:1fr 1fr auto}.prow .pn{grid-column:1/-1}}
 .who{display:none;font-size:13px;color:var(--muted);margin:0}
+.lastline{font-size:13px;color:var(--fg);margin-top:2px;font-variant-numeric:tabular-nums}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--fg);margin-top:10px}
+.toggle input{width:auto;margin:0}
+.chk-item .fields .cs-wrap{display:none;grid-column:1/-1;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
+.detail .chk-item .cs-wrap{display:grid}
+.detail .chk-item .cr-wrap{display:none}
+.tabbar{display:none}
 .ptab{width:100%;border-collapse:collapse;font-size:14px}
 .ptab th,.ptab td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;white-space:normal}
 .ptab th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
 .ptab input{padding:6px 8px;width:100%;margin-bottom:4px}
 .ptab .acts{white-space:nowrap;text-align:right}
 .ptab .acts button{width:auto;padding:6px 10px;margin-left:2px;cursor:pointer}
+@media (max-width:899px){
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .tabbar{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));gap:6px}
+  .tabbar button{width:100%;background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;padding:10px 4px;border-radius:8px;cursor:pointer}
+  .tabbar button[aria-current="page"]{color:var(--accent);background:var(--bg)}
+  main[data-tab="train"] .tab-plan, main[data-tab="train"] .tab-prog,
+  main[data-tab="plan"] .tab-train, main[data-tab="plan"] .tab-prog,
+  main[data-tab="prog"] .tab-train, main[data-tab="prog"] .tab-plan{display:none}
+}
 .howto{display:none;background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:14px}
 .howto ol{margin:6px 0;padding-left:20px}
 .howto code{font-size:13px;font-variant-numeric:tabular-nums}
@@ -111,7 +127,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
   details.pin>summary{display:none}
 }
 </style>
-<main>
+<main data-tab="train">
   <header>
     <h1>Physique Trainingslog</h1>
     <p class="sub">Woche 1 beginnt Mo 26.10.2026 · Ende Bulk April 2027</p>
@@ -126,18 +142,19 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 
   <p class="who" id="who">Nicht angemeldet</p>
 
-  <details class="card" id="sec-check" open>
+  <details class="card tab-train" id="sec-check" open>
     <summary>Trainingstag abhaken</summary>
     <div class="row2">
       <label style="min-width:180px">Datum<input type="date" id="cdate"></label>
       <span class="status" id="cday"></span>
     </div>
+    <label class="toggle"><input type="checkbox" id="cdetail"> Detailliert: Wdh. pro Satz eintragen</label>
     <div id="checklist"></div>
     <div class="row"><button class="primary" id="csave" type="button">Speichern</button><span class="status" id="cst" role="status"></span></div>
-    <p class="meta">Ein Haken zählt als gemacht. Gewicht und Wiederholungen des besten Satzes werden für den Fortschritt übernommen. Nicht abgehakte Übungen fließen nicht in den Fortschritt ein.</p>
+    <p class="meta">Ein Haken zählt als gemacht. Für den Fortschritt zählt der beste Satz: das Gewicht und die höchste Wdh. der Sätze. Nicht abgehakte Übungen fließen nicht in den Fortschritt ein.</p>
   </details>
 
-  <details class="card" id="sec-satz">
+  <details class="card tab-train" id="sec-satz">
     <summary>Satz eintragen</summary>
     <form id="f" class="form" autocomplete="off">
       <label>Datum<input type="date" id="date" required></label>
@@ -151,7 +168,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <div class="row"><button class="primary" form="f" type="submit">Speichern</button><span class="status" id="st" role="status"></span></div>
   </details>
 
-  <details class="card" id="sec-pr">
+  <details class="card tab-train" id="sec-pr">
     <summary>PR eintragen</summary>
     <form id="pf" class="form" autocomplete="off">
       <label>Datum<input type="date" id="pdate" required></label>
@@ -165,7 +182,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <ul class="prlist" id="prlist"></ul>
   </details>
 
-  <details class="card" id="sec-prog" open>
+  <details class="card tab-prog" id="sec-prog" open>
     <summary>Fortschritt</summary>
     <div class="lifts">
       <div class="card clickable" id="c-bank" data-ex="Bankdrücken" role="button" tabindex="0"></div>
@@ -176,7 +193,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <p class="meta">Tippe auf eine Karte, um ihren Verlauf unten anzuzeigen.</p>
   </details>
 
-  <details class="card" id="verlauf">
+  <details class="card tab-prog" id="verlauf">
     <summary>Verlauf</summary>
     <div class="row2">
       <label>Übung<select id="vex"></select></label>
@@ -185,7 +202,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <div id="vgraph"></div>
   </details>
 
-  <details class="card" id="sec-last">
+  <details class="card tab-prog" id="sec-last">
     <summary>Letzte Einträge</summary>
     <div class="tablewrap">
       <table>
@@ -196,21 +213,21 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <p class="empty" id="none">Noch keine Einträge. Hake oben einen Trainingstag ab oder trag einen Satz ein.</p>
   </details>
 
-  <details class="card pin" id="sec-week" open>
+  <details class="card pin tab-plan" id="sec-week" open>
     <summary>Wochenstruktur</summary>
     <p class="meta">Fünf Trainingstage, Do und So frei. Jede Hauptübung kommt 3× pro Woche vor: eine schwere Einheit (H, 3–5 Wdh.) und zwei Volumen-Einheiten (V, 6–8 Wdh.).</p>
     <div class="wk-sum" id="wksum"></div>
     <div class="wk-days" id="wkdays"></div>
   </details>
 
-  <details class="card pin" id="sec-plan" open>
+  <details class="card pin tab-plan" id="sec-plan" open>
     <summary>Plan bearbeiten</summary>
     <p class="meta">So geht's: Bei einer Übung auf <strong>Bearbeiten</strong> tippen, Name oder Sätze ändern und auf <strong>Speichern</strong> drücken. Mit <strong>Löschen</strong> entfernst du sie (zweimal tippen). Jede Änderung wird sofort gespeichert. Der Name im Log ist nur für die Diagramme wichtig, bei Klimmzügen steht dort „Klimmzug“.</p>
     <div id="planGrid"></div>
     <span class="status" id="pst2" role="status"></span>
   </details>
 
-  <details class="card" id="sec-text">
+  <details class="card tab-plan" id="sec-text">
     <summary>Trainingsplan (Text)</summary>
     <details open>
       <summary>Ziele</summary>
@@ -262,6 +279,12 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 
   <p class="meta">Deine Einträge werden in deinem Supabase-Projekt gespeichert und sind nach der Anmeldung auf allen Geräten verfügbar.</p>
 </main>
+
+<nav class="tabbar" id="tabbar" aria-label="Bereiche">
+  <button type="button" data-tab="plan">Trainingsplan</button>
+  <button type="button" data-tab="train" aria-current="page">Training</button>
+  <button type="button" data-tab="prog">Fortschritt</button>
+</nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const EX=['Bankdrücken','Kniebeuge','Kreuzheben','Klimmzug','Klimmzug-Negatives','Hohe Klimmzüge','Schulterdrücken','Schrägbank','Dips','Trizepsdrücken','Überkopf-Trizeps','Seitheben','Pec Deck','Face Pulls','Rudern','Latzug','Kabelrudern','Langhantel-Curls','Hammer Curls','Preacher Curls','Bizeps-Curls KH','Eigene Übung'];
@@ -290,7 +313,7 @@ const nextTrainDate=from=>{for(let i=0;i<7;i++){const d=new Date(from.getFullYea
 
 const $=id=>document.getElementById(id);
 const st=$('st'), f=$('f'), exS=$('ex'), ownL=$('ownL'), ownEl=$('own'), wEl=$('w'), rEl=$('r'), rirEl=$('rir'), noteEl=$('note'), dateEl=$('date');
-const cdate=$('cdate'), checklist=$('checklist'), cst=$('cst'), cday=$('cday');
+const cdate=$('cdate'), cdetail=$('cdetail'), checklist=$('checklist'), cst=$('cst'), cday=$('cday');
 const pf=$('pf'), pex=$('pex'), pw=$('pw'), prr=$('pr_n'), pdate=$('pdate'), pnote=$('pnote'), pst=$('pst');
 const vex=$('vex'), vrep=$('vrep'), tb=$('tb');
 let rows=[], checksMap={}, checksCol=null, setsCol=null, ready=false, dirty=false;
@@ -305,21 +328,48 @@ function lastWeight(name){
   return r?fmt(r.weight):'';
 }
 
+let detailMode=(()=>{try{return localStorage.getItem('physique-detail')==='1';}catch(e){return false;}})();
+function parseSets(t){
+  const m=/^(\d+)\s*(×|Sätze)/.exec(t||'');
+  return m?Math.min(+m[1],8):3;
+}
+function prevEntry(key,date){
+  let best=null;
+  Object.values(checksMap).forEach(c=>{
+    if(!c||!c.date||c.date>=date) return;
+    const it=(c.items||{})[key];
+    if(it&&it.done&&(!best||c.date>best.date)) best={date:c.date,it};
+  });
+  return best;
+}
+function lastLine(e){
+  if(!e) return 'Letztes Mal: noch nichts eingetragen';
+  const it=e.it, w=it.weight>0?fmt(it.weight)+' kg · ':'';
+  const detail=Array.isArray(it.sets)&&it.sets.some(x=>x>0);
+  return 'Letztes Mal ('+dmy(e.date)+'): '+w+(detail?it.sets.join(' · ')+' Wdh.':(it.reps||'–')+' Wdh. (bester Satz)');
+}
 function renderChecklist(){
   const d=parse(cdate.value||ymd(new Date()));
   const day=DAYS[d.getDay()];
+  checklist.classList.toggle('detail',detailMode);
   if(!day){ cday.textContent='Ruhetag'; checklist.innerHTML='<p class="empty">An diesem Tag ist kein Training geplant.</p>'; return; }
   cday.textContent=day.k+' · Woche '+weekNo(ymd(d));
-  const saved=(checksMap[ymd(d)+'_'+day.k]||{}).items||{};
+  const date=ymd(d);
+  const saved=(checksMap[date+'_'+day.k]||{}).items||{};
   checklist.innerHTML=day.items.map(([name,log,target])=>{
-    const key=slug(name), s=saved[key]||{};
+    const key=slug(name), s=saved[key]||{}, n=parseSets(target);
+    const sv=Array.isArray(s.sets)?s.sets:[];
     const ph=lastWeight(log);
+    const setInputs=Array.from({length:n},(_,i)=>'<label>Satz '+(i+1)+'<input type="number" class="csr" step="1" min="0" max="50" inputmode="numeric" value="'+esc(sv[i]??'')+'"></label>').join('');
     return '<div class="chk-item'+(s.done?' done':'')+'" data-key="'+esc(key)+'" data-log="'+esc(log)+'" data-name="'+esc(name)+'">'
       +'<input type="checkbox" class="cb" aria-label="'+esc(name)+' gemacht"'+(s.done?' checked':'')+'>'
-      +'<div><div class="nm">'+esc(name)+'</div><div class="tg">Ziel: '+esc(target)+'</div>'
+      +'<div><div class="nm">'+esc(name)+'</div>'
+      +'<div class="lastline">'+esc(lastLine(prevEntry(key,date)))+'</div>'
+      +'<div class="tg">Soll: '+esc(target)+'</div>'
       +'<div class="fields">'
       +'<label>Gewicht (kg)<input type="number" class="cw" step="0.5" min="0" inputmode="decimal" value="'+esc(s.weight??'')+'" placeholder="'+esc(ph)+'"></label>'
-      +'<label>Wdh. (bester Satz)<input type="number" class="cr" step="1" min="0" inputmode="numeric" value="'+esc(s.reps??'')+'"></label>'
+      +'<label class="cr-wrap">Wdh. (bester Satz)<input type="number" class="cr" step="1" min="0" inputmode="numeric" value="'+esc(s.reps??'')+'"></label>'
+      +'<div class="cs-wrap">'+setInputs+'</div>'
       +'<label>Notiz<input class="cn" maxlength="120" value="'+esc(s.note||'')+'"></label>'
       +'</div></div></div>';
   }).join('');
@@ -682,12 +732,16 @@ async function saveChecklist(){
   if(!day){cst.textContent='Ruhetag, nichts zu speichern.';return;}
   const date=ymd(d), items={};
   checklist.querySelectorAll('.chk-item').forEach(el=>{
+    const sets=[...el.querySelectorAll('.csr')].map(x=>parseInt(x.value,10)||0);
+    const anySets=sets.some(x=>x>0);
+    const crVal=parseInt(el.querySelector('.cr').value,10)||0;
     items[el.dataset.key]={
       name:el.dataset.name, log:el.dataset.log,
       done:el.querySelector('.cb').checked,
       weight:parseFloat(el.querySelector('.cw').value)||0,
-      reps:parseInt(el.querySelector('.cr').value,10)||0,
-      note:el.querySelector('.cn').value.trim()
+      reps:(detailMode&&anySets)?Math.max(...sets):crVal,
+      note:el.querySelector('.cn').value.trim(),
+      ...(anySets?{sets}:{})
     };
   });
   const btn=$('csave');
@@ -747,6 +801,19 @@ tb.addEventListener('click',async e=>{
 });
 
 $('csave').addEventListener('click',saveChecklist);
+cdetail.checked=detailMode;
+cdetail.addEventListener('change',()=>{
+  detailMode=cdetail.checked;
+  try{localStorage.setItem('physique-detail',detailMode?'1':'0');}catch(e){}
+  checklist.classList.toggle('detail',detailMode);
+});
+const tabbar=$('tabbar');
+tabbar.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-tab]'); if(!b) return;
+  document.querySelector('main').dataset.tab=b.dataset.tab;
+  tabbar.querySelectorAll('button').forEach(x=>{ if(x===b) x.setAttribute('aria-current','page'); else x.removeAttribute('aria-current'); });
+  window.scrollTo({top:0});
+});
 cdate.addEventListener('change',()=>{dirty=false;renderChecklist();});
 checklist.addEventListener('input',()=>{dirty=true;});
 checklist.addEventListener('change',()=>{dirty=true;});
