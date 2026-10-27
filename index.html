@@ -498,6 +498,7 @@ try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(c){cache=c.ca
 const persist=()=>{try{localStorage.setItem(CACHE_KEY,JSON.stringify({cache,pending}))}catch(e){}};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const setStatus=t=>{const el=$('syncst');if(el)el.textContent=t;};
+const withTimeout=(p,ms=20000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Zeitüberschreitung')),ms))]);
 
 const toRow={
   sets:(id,d)=>({id,date:d.date,exercise:d.exercise,weight:d.weight??0,reps:d.reps,rir:d.rir??null,note:d.note||'',pr:!!d.pr,source:d.source||null}),
@@ -532,20 +533,21 @@ async function flush(){
   try{
     while(pending.length){
       const p=pending[0];
-      const res=p.op==='up'
-        ? await sb.from(p.table).upsert(p.row)
-        : await sb.from(p.table).delete().eq('id',p.id);
+      const req=p.op==='up'
+        ? sb.from(p.table).upsert(p.row)
+        : sb.from(p.table).delete().eq('id',p.id);
+      const res=await withTimeout(req);
       if(res.error) throw res.error;
       pending.shift(); persist();
     }
     setStatus('Synchronisiert. Stand: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr');
   }catch(e){
-    setStatus('Noch nicht übertragen ('+(e.message||'Fehler')+'). Wird beim nächsten Versuch erneut gesendet.');
+    setStatus('Noch nicht übertragen: '+pending.length+' Änderung(en) ('+(e.message||'Fehler')+'). Wird erneut gesendet, sobald die Verbindung klappt.');
   }finally{flushing=false;}
 }
 
 async function pullAll(){
-  const [s,c]=await Promise.all([sb.from('sets').select('*'),sb.from('checks').select('*')]);
+  const [s,c]=await withTimeout(Promise.all([sb.from('sets').select('*'),sb.from('checks').select('*')]));
   if(s.error||c.error){setStatus('Laden fehlgeschlagen: '+((s.error||c.error).message));return;}
   const sets={}, checks={};
   s.data.forEach(r=>{sets[r.id]=fromRow.sets(r);});
@@ -558,6 +560,7 @@ async function pullAll(){
   cache={sets,checks,owner:user.id};
   persist();
   notifyAll();
+  setStatus('Daten geladen. Ungesendet: '+pending.length);
 }
 
 function localDb(){
@@ -860,10 +863,14 @@ if(window.supabase){
     $('who').textContent=user?'Angemeldet als '+user.email:'Nicht angemeldet';
     updateAuthUI();
     if(user){
-      if(cache.owner!==user.id){cache={sets:{},checks:{},owner:user.id};pending=[];persist();}
+      // Ungesendete Änderungen bleiben erhalten. Nur bei einem anderen Konto wird der Puffer geleert.
+      if(cache.owner&&cache.owner!==user.id){cache={sets:{},checks:{},owner:user.id};pending=[];}
+      else{cache.owner=user.id;}
+      persist();
       setStatus('Lade Daten …');
-      await loadPlan();
-      await pullAll();
+      try{await withTimeout(loadPlan());}catch(e){setStatus('Plan nicht geladen: '+e.message);}
+      await flush();
+      try{await withTimeout(pullAll());}catch(e){setStatus('Laden fehlgeschlagen: '+e.message);}
       await flush();
     }else{
       DAYS=buildDays(DEFAULT_PLAN);
@@ -874,4 +881,6 @@ if(window.supabase){
 }else{
   setStatus('Keine Verbindung zu Supabase. Die Seite zeigt nur die lokale Kopie.');
 }
+window.addEventListener('online',()=>flush());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden) flush();});
 </script>
