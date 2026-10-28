@@ -287,14 +287,14 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
 </nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
-const EX=['Bankdrücken','Kniebeuge','Kreuzheben','Klimmzug','Klimmzug-Negatives','Hohe Klimmzüge','Schulterdrücken','Schrägbank','Dips','Trizepsdrücken','Überkopf-Trizeps','Seitheben','Pec Deck','Face Pulls','Rudern','Latzug','Kabelrudern','Langhantel-Curls','Hammer Curls','Preacher Curls','Bizeps-Curls KH','Eigene Übung'];
+const EX=['Bankdrücken','Kniebeuge','Kreuzheben','Klimmzug','Klimmzug-Negatives','Hohe Klimmzüge','Schulterdrücken','Schrägbank','Dips','Trizepsdrücken','Überkopf-Trizeps','Seitheben','Pec Deck','Face Pulls','Rudern','Latzug','Kabelrudern','Langhantel-Curls','Hammer Curls','Preacher Curls','Bizeps-Curls KH','Unterarm-Curls','Reverse Curls','Eigene Übung'];
 // [Name in Liste, Name fürs Log, Ziel]
 let DAYS={
-  1:{k:'Mo',items:[['Bankdrücken H','Bankdrücken','4×4 · 72,5 kg'],['Kniebeuge V','Kniebeuge','3×8 · 45–50 kg'],['Schulterdrücken','Schulterdrücken','3×8–12'],['Dips','Dips','3×8–12'],['Trizepsdrücken','Trizepsdrücken','3×10–15'],['Seitheben','Seitheben','3×12–20']]},
-  2:{k:'Di',items:[['Kreuzheben H','Kreuzheben','3×3–5 · 100 kg'],['Bankdrücken V','Bankdrücken','3×6–8 · ca. 65 kg'],['Klimmzüge','Klimmzug','4 Sätze nah am Versagen · Wdh. = bester Satz'],['Rudern','Rudern','3×8–12'],['Langhantel-Curls','Langhantel-Curls','3×10–12']]},
-  3:{k:'Mi',items:[['Kniebeuge H','Kniebeuge','4×4 · 55 → 60 kg'],['Kreuzheben V','Kreuzheben','3×6–8 · ca. 90 kg'],['Trizepsdrücken','Trizepsdrücken','3×12–15'],['Überkopf-Trizeps','Überkopf-Trizeps','3×10–15 · Kabel'],['Bizeps-Curls KH','Bizeps-Curls KH','3×12–15']]},
-  5:{k:'Fr',items:[['Bankdrücken V','Bankdrücken','3×6–8 · ca. 65 kg'],['Kreuzheben V','Kreuzheben','2×8 · ca. 90 kg'],['Schrägbank','Schrägbank','3×8–12'],['Pec Deck','Pec Deck','3×10–15'],['Seitheben','Seitheben','4×12–20'],['Überkopf-Trizeps','Überkopf-Trizeps','3×10–15'],['Face Pulls','Face Pulls','3×15–20']]},
-  6:{k:'Sa',items:[['Kniebeuge V','Kniebeuge','3×8 · 45–50 kg'],['Klimmzug-Negatives','Klimmzug-Negatives','3×3'],['Hohe Klimmzüge','Hohe Klimmzüge','3×4'],['Latzug','Latzug','3×10–15'],['Kabelrudern','Kabelrudern','3×12–15'],['Hammer Curls','Hammer Curls','3×10–12'],['Preacher Curls','Preacher Curls','3×10–12']]}
+  1:{k:'Mo',items:[['Bankdrücken H','Bankdrücken','3×3–5 · 72,5 kg'],['Kniebeuge V','Kniebeuge','3×8 · 45–50 kg'],['Schulterdrücken','Schulterdrücken','3×8–12'],['Dips','Dips','3×8–12'],['Trizepsdrücken','Trizepsdrücken','3×10–15 · 1 Arm'],['Seitheben','Seitheben','3×12–20']]},
+  2:{k:'Di',items:[['Kreuzheben H','Kreuzheben','3×3–5 · 100 kg'],['Bankdrücken V','Bankdrücken','3×6–8 · ca. 65 kg'],['Klimmzüge','Klimmzug','4 Sätze nah am Versagen'],['Rudern','Rudern','2×8–12'],['Langhantel-Curls','Langhantel-Curls','3×10–12'],['Hammer Curls','Hammer Curls','2×8 · 20 kg pro Arm']]},
+  3:{k:'Mi',items:[['Kniebeuge H','Kniebeuge','3×3–5 · 55 → 60 kg'],['Kreuzheben V','Kreuzheben','3×6–8 · ca. 90 kg'],['Trizepsdrücken','Trizepsdrücken','3×12–15 · 1 Arm'],['Überkopf-Trizeps','Überkopf-Trizeps','3×10–15 · 1 Arm · Kabel'],['Bizeps-Curls KH','Bizeps-Curls KH','3×12–15']]},
+  5:{k:'Fr',items:[['Bankdrücken V','Bankdrücken','3×6–8 · ca. 65 kg'],['Kreuzheben V','Kreuzheben','2×8 · ca. 90 kg'],['Schrägbank','Schrägbank','2×8–12'],['Pec Deck','Pec Deck','2×10–15'],['Seitheben','Seitheben','4×12–20'],['Überkopf-Trizeps','Überkopf-Trizeps','3×10–15 · 1 Arm'],['Face Pulls','Face Pulls','2×15–20']]},
+  6:{k:'Sa',items:[['Kniebeuge V','Kniebeuge','3×8 · 45–50 kg'],['Klimmzug-Negatives','Klimmzug-Negatives','3×3'],['Hohe Klimmzüge','Hohe Klimmzüge','3×4'],['Latzug','Latzug','2×10–15'],['Kabelrudern','Kabelrudern','2×12–15'],['Preacher Curls','Preacher Curls','3×10–12 · beidseitig'],['Unterarm-Curls','Unterarm-Curls','2×15–20 · 1 Arm'],['Reverse Curls','Reverse Curls','2×15–20 · 1 Arm']]}
 };
 const DAYN=['So','Mo','Di','Mi','Do','Fr','Sa'];
 const START=new Date(2026,9,26);
