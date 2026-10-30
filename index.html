@@ -134,14 +134,7 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     <p class="today" id="today"></p>
   </header>
 
-  <details class="card" id="sec-auth" open>
-    <summary>Anmeldung</summary>
-    <div id="authOut"></div>
-    <p class="meta" id="syncst"></p>
-  </details>
-
-  <p class="who" id="who">Nicht angemeldet</p>
-
+  
   <details class="card tab-train" id="sec-check" open>
     <summary>Trainingstag abhaken</summary>
     <div class="row2">
@@ -277,7 +270,13 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
     </details>
   </details>
 
-  <p class="meta">Deine Einträge werden in deinem Supabase-Projekt gespeichert und sind nach der Anmeldung auf allen Geräten verfügbar.</p>
+  <details class="card" id="sec-backup">
+    <summary>Sicherung</summary>
+    <p class="meta">Alle Daten liegen nur in diesem Browser. Lade regelmäßig eine Sicherung herunter, damit nichts verloren geht.</p>
+    <div class="row"><button class="primary" id="exp" type="button">Sicherung herunterladen</button></div>
+    <label style="margin-top:12px">Sicherung wiederherstellen<input type="file" id="imp" accept="application/json,.json"></label>
+    <p class="status" id="bst" role="status"></p>
+  </details>
 </main>
 
 <nav class="tabbar" id="tabbar" aria-label="Bereiche">
@@ -285,7 +284,6 @@ textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border
   <button type="button" data-tab="train" aria-current="page">Training</button>
   <button type="button" data-tab="prog">Fortschritt</button>
 </nav>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const EX=['Bankdrücken','Kniebeuge','Kreuzheben','Klimmzug','Klimmzug-Negatives','Hohe Klimmzüge','Schulterdrücken','Schrägbank','Dips','Trizepsdrücken','Überkopf-Trizeps','Seitheben','Pec Deck','Face Pulls','Rudern','Latzug','Kabelrudern','Langhantel-Curls','Hammer Curls','Preacher Curls','Bizeps-Curls KH','Eigene Übung'];
 // [Name in Liste, Name fürs Log, Ziel]
@@ -522,6 +520,7 @@ function notifyAll(){notifyName('sets');notifyName('checks');}
 
 // Warteschlange: Änderungen, die noch nicht bei Supabase angekommen sind
 function enqueue(p){
+  if(!sb) return;
   pending=pending.filter(x=>!(x.table===p.table&&x.id===p.id));
   pending.push(p);
   persist();
@@ -591,27 +590,6 @@ function localDb(){
   return {collection:col};
 }
 
-// Anmeldung: E-Mail-Link, danach bleibt das Gerät angemeldet
-function updateAuthUI(){
-  const out=$('authOut');
-  if(user){
-    out.innerHTML='<p class="meta">Angemeldet als '+esc(user.email)+'</p><button type="button" id="lo" class="btn-sec">Abmelden</button>';
-  }else{
-    out.innerHTML='<form id="lf" class="row2"><label style="flex:1 1 260px">E-Mail<input type="email" id="lemail" required autocomplete="email"></label><button class="primary" type="submit">Anmelde-Link senden</button></form>';
-  }
-}
-$('authOut').addEventListener('submit',async e=>{
-  if(e.target.id!=='lf') return;
-  e.preventDefault();
-  const email=$('lemail').value.trim();
-  setStatus('Link wird gesendet …');
-  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0]}});
-  setStatus(error?'Fehler: '+error.message:'Link ist unterwegs. Öffne ihn auf diesem Gerät.');
-});
-$('authOut').addEventListener('click',async e=>{
-  if(e.target.id==='lo'){await sb.auth.signOut();}
-});
-
 // Wochentage und Plan pro Nutzer. Der Plan wird in der Tabelle "plans" gespeichert.
 const DAYK={1:'Mo',2:'Di',3:'Mi',5:'Fr',6:'Sa'};
 const DAYNAME={1:'Montag',2:'Dienstag',3:'Mittwoch',5:'Freitag',6:'Samstag'};
@@ -653,10 +631,7 @@ async function persistPlan(){
   DAYS=buildDays(plan);
   renderToday(); renderChecklist(); render();
   renderPlanEditor();
-  if(!user){$('pst2').textContent='Nur lokal. Bitte zuerst anmelden, damit der Plan gespeichert wird.';return;}
-  $('pst2').textContent='Speichere …';
-  const {error}=await sb.from('plans').upsert({user_id:user.id,days:plan,updated_at:new Date().toISOString()});
-  $('pst2').textContent=error?'Nicht gespeichert: '+error.message:'Gespeichert.';
+  $('pst2').textContent=writeLocalPlan(plan)?'Gespeichert.':'Nicht gespeichert: Der Browser-Speicher ist voll oder blockiert.';
 }
 $('planGrid').addEventListener('click',async e=>{
   const b=e.target.closest('button[data-act]');
@@ -700,15 +675,11 @@ function parsePlanText(text){
     return [p[0],p[1]||p[0],p[2]||''];
   }).filter(x=>x[0]);
 }
-async function loadPlan(){
-  const {data,error}=await sb.from('plans').select('days').maybeSingle();
-  if(error){setStatus('Plan konnte nicht geladen werden: '+error.message);return;}
-  let plan=data?data.days:null;
-  if(!plan){
-    plan=DEFAULT_PLAN;
-    const r=await sb.from('plans').upsert({user_id:user.id,days:plan,updated_at:new Date().toISOString()});
-    if(r.error) setStatus('Plan konnte nicht angelegt werden: '+r.error.message);
-  }
+const PLAN_KEY='physique-plan';
+function readLocalPlan(){try{const p=JSON.parse(localStorage.getItem(PLAN_KEY)||'null');return p&&typeof p==='object'?p:null;}catch(e){return null;}}
+function writeLocalPlan(plan){try{localStorage.setItem(PLAN_KEY,JSON.stringify(plan));return true;}catch(e){return false;}}
+function loadPlan(){
+  const plan=readLocalPlan()||DEFAULT_PLAN;
   DAYS=buildDays(plan);
   fillPlanEditor(); renderToday(); renderChecklist(); render();
 }
@@ -835,7 +806,6 @@ exS.addEventListener('change',()=>{ownL.hidden=exS.value!=='Eigene Übung';});
 dateEl.value=ymd(new Date());
 pdate.value=ymd(new Date());
 cdate.value=ymd(nextTrainDate(new Date()));
-updateAuthUI();
 fillPlanEditor();
 renderToday();
 renderChecklist();
@@ -856,31 +826,29 @@ checksCol.limit(500).onSnapshot(snap=>{
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 
-if(window.supabase){
-  sb=window.supabase.createClient(SB_URL,SB_KEY);
-  sb.auth.onAuthStateChange(async(_event,session)=>{
-    user=session?session.user:null;
-    $('who').textContent=user?'Angemeldet als '+user.email:'Nicht angemeldet';
-    updateAuthUI();
-    if(user){
-      // Ungesendete Änderungen bleiben erhalten. Nur bei einem anderen Konto wird der Puffer geleert.
-      if(cache.owner&&cache.owner!==user.id){cache={sets:{},checks:{},owner:user.id};pending=[];}
-      else{cache.owner=user.id;}
-      persist();
-      setStatus('Lade Daten …');
-      try{await withTimeout(loadPlan());}catch(e){setStatus('Plan nicht geladen: '+e.message);}
-      await flush();
-      try{await withTimeout(pullAll());}catch(e){setStatus('Laden fehlgeschlagen: '+e.message);}
-      await flush();
-    }else{
-      DAYS=buildDays(DEFAULT_PLAN);
-      fillPlanEditor(); renderToday(); renderChecklist(); render();
-      setStatus('Nicht angemeldet. Einträge werden erst nach der Anmeldung gespeichert.');
-    }
-  });
-}else{
-  setStatus('Keine Verbindung zu Supabase. Die Seite zeigt nur die lokale Kopie.');
+user={id:'lokal'};
+loadPlan();
+async function importAll(file){
+  const data=JSON.parse(await file.text());
+  if(!data||!data.plan||!data.sets||!data.checks) throw new Error('Die Datei passt nicht zur App.');
+  cache.sets=data.sets; cache.checks=data.checks; pending=[]; persist();
+  writeLocalPlan(data.plan);
+  loadPlan(); notifyAll();
 }
+$('exp').addEventListener('click',()=>{
+  const data={version:1,exported:new Date().toISOString(),plan:readLocalPlan()||DEFAULT_PLAN,sets:cache.sets||{},checks:cache.checks||{}};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
+  a.download='physique-sicherung-'+ymd(new Date())+'.json';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  $('bst').textContent='Sicherung wurde erstellt.';
+});
+$('imp').addEventListener('change',async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{await importAll(f); $('bst').textContent='Sicherung eingespielt.';}
+  catch(err){$('bst').textContent='Fehler: '+err.message;}
+  e.target.value='';
+});
 window.addEventListener('online',()=>flush());
 document.addEventListener('visibilitychange',()=>{if(!document.hidden) flush();});
 </script>
